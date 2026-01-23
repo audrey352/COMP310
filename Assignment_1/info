@@ -2,8 +2,8 @@ Due February 2nd:
 
 Work:
 echo ✓ 
+batch mode ✓
 
-batch mode
 ls 
 mkdir
 touch 
@@ -15,3 +15,7 @@ Completed:
 echo:
 Notes- make sure you add the new commands to the main command logic otherwise it'll
 just tell you that there is no command with that name 
+batch mode: 
+fixed infinite loop by making it check if fgets returns null. Made testBatch.txt to test different instructions.
+Fixed the $ by using the isatty function (which checks which stream the program is recieving input from...) from the
+unistd.h library. 
