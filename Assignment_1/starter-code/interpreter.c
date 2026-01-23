@@ -23,6 +23,9 @@ int set(char *var, char *value);
 int print(char *var);
 int source(char *script);
 int badcommandFileDoesNotExist();
+//new commands:
+int echo(char *var);
+
 
 // Interpret commands and their arguments
 int interpreter(char *command_args[], int args_size) {
@@ -64,7 +67,11 @@ int interpreter(char *command_args[], int args_size) {
             return badcommand();
         return source(command_args[1]);
 
-    } else
+    } else if (strcmp(command_args[0], "echo") == 0){
+	    if (args_size != 2)
+		    return badcommand();
+	    return echo(command_args[1]);
+    }else
         return badcommand();
 }
 
@@ -128,4 +135,28 @@ int source(char *script) {
     fclose(p);
 
     return errCode;
+}
+
+int echo(char *string){
+	// Initialize eval to the string, which we will return
+	char *eval = malloc(strlen(string) + 1);
+	strcpy(eval, string);
+	// Initialize value for the character without the first character
+	char *value = string+1;
+
+
+	//Step 1: Check if string is preceded by $
+	if (string[0] == '$'){
+		char *found = mem_get_value(value);
+		
+		if (strcmp(found, "Variable does not exist") == 0){
+			eval = ""; //replace with an empty string
+		}
+		else{
+			eval = found; //replace with found value
+		}
+	}
+
+	printf("%s\n", eval); //print and return
+	return 0;
 }

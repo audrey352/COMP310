@@ -1,7 +1,8 @@
 Due February 2nd:
 
 Work:
-echo
+echo ✓ 
+
 batch mode
 ls 
 mkdir
@@ -10,4 +11,7 @@ cd
 one liners (chained instructions)
 run
 
-back in git, yay 
+Completed:
+echo:
+Notes- make sure you add the new commands to the main command logic otherwise it'll
+just tell you that there is no command with that name 
