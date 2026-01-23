@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
-//#include <unistd.h>
+#include <unistd.h>
 #include "shell.h"
 #include "interpreter.h"
 #include "shellmemory.h"
@@ -23,10 +23,13 @@ int main(int argc, char *argv[]) {
     
     //init shell memory
     mem_init();
-    while(1) {							
-        printf("%c ", prompt);
-        // here you should check the unistd library 
-        // so that you can find a way to not display $ in the batch mode
+    while(1) {
+	    //isatty is part of unistd: returns 1 if file is the 
+	    // terminal and 0 if from something else...
+	if (isatty(STDIN_FILENO)){	    
+        	printf("%c ", prompt);
+	}
+
         fgets(userInput, MAX_USER_INPUT-1, stdin);
         errorCode = parseInput(userInput);
         if (errorCode == -1) exit(99);	// ignore all other errors
