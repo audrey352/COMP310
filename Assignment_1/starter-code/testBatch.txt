@@ -1,4 +1,3 @@
 help 
 set v hello
 echo $v
-quit

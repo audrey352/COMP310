@@ -29,8 +29,10 @@ int main(int argc, char *argv[]) {
 	if (isatty(STDIN_FILENO)){	    
         	printf("%c ", prompt);
 	}
-
-        fgets(userInput, MAX_USER_INPUT-1, stdin);
+	
+	if (fgets(userInput, MAX_USER_INPUT-1, stdin)==NULL){
+		return 0;
+	}
         errorCode = parseInput(userInput);
         if (errorCode == -1) exit(99);	// ignore all other errors
         memset(userInput, 0, sizeof(userInput));
