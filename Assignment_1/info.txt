@@ -1,23 +1,34 @@
-Due February 2nd:
+Due February 2nd
 
-Work:
-echo ✓ 
-batch mode ✓
+Works:
+-----
+1.2.1 echo ✓ 
+1.2.2 batch mode ✓
+1.2.3 my_ls, my_mkdir, my_touch, my_cd
 
-ls 
-mkdir
-touch 
-cd
+
+To do:
+------
 one liners (chained instructions)
 run
 
+
 Completed:
+----------
 echo:
 Notes- make sure you add the new commands to the main command logic otherwise it'll
 just tell you that there is no command with that name 
+
 batch mode: 
 fixed infinite loop by making it check if fgets returns null. Made testBatch.txt to test different instructions.
 Fixed the $ by using the isatty function (which checks which stream the program is recieving input from...) from the
 unistd.h library. 
 
-TESTING
+my_ls, my_mkdir, my_touch, my_cd:
+all satisfy the criterias in instructions
+Note - more general error handling?? not checking if dir already exists when using my_mkdir,
+        not checking if file already exists, etc
+
+
+General notes:
+RUN & WRITE CODE IN project/src, NOT in starter-code !!
