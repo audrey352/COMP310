@@ -19,3 +19,5 @@ batch mode:
 fixed infinite loop by making it check if fgets returns null. Made testBatch.txt to test different instructions.
 Fixed the $ by using the isatty function (which checks which stream the program is recieving input from...) from the
 unistd.h library. 
+
+TESTING
