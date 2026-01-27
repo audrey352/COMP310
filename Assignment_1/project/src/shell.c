@@ -46,26 +46,44 @@ int main(int argc, char *argv[]) {
 int wordEnding(char c) {
     // You may want to add ';' to this at some point,
     // or you may want to find a different way to implement chains.
-    return c == '\0' || c == '\n' || c == ' ';
+    return c == '\0' || c == '\n' || c == ' ' ;
 }
 
 int parseInput(char inp[]) {
+    //Using strtok command to split into different commands that we can parse and pass
+    const char *delim = ";";
+    char *command; //current command we will work with
+    command  = strtok(inp, delim); //split into first
+
+    int errorCode = 0;
+    int counter = 0; 
+
+    while (command != NULL && counter < 10){
     char tmp[200], *words[100];                            
     int ix = 0, w = 0;
     int wordlen;
-    int errorCode;
-    for (ix = 0; inp[ix] == ' ' && ix < 1000; ix++); // skip white spaces
-    while (inp[ix] != '\n' && inp[ix] != '\0' && ix < 1000) {
+    //parse edited to be only for specific command (replaced inp with command)
+    for (ix = 0; command[ix] == ' ' && ix < 1000; ix++); // skip white spaces
+    while (command[ix] != '\n' && command[ix] != '\0' && ix < 1000) {
         // extract a word
-        for (wordlen = 0; !wordEnding(inp[ix]) && ix < 1000; ix++, wordlen++) {
-            tmp[wordlen] = inp[ix];                        
+        for (wordlen = 0; !wordEnding(command[ix]) && ix < 1000; ix++, wordlen++) {
+            tmp[wordlen] = command[ix];                        
         }
         tmp[wordlen] = '\0';
         words[w] = strdup(tmp);
         w++;
-        if (inp[ix] == '\0') break;
+        if (command[ix] == '\0') break;
         ix++; 
     }
-    errorCode = interpreter(words, w);
+    words[w] = NULL; //Making sure that it ends after w words
+    
+    errorCode = interpreter(words, w); //send command to the interpreter
+    //if things went wrong, return immediately
+    if (errorCode != 0){
+	    return errorCode;
+    }
+    command = strtok(NULL, delim); //set to next word
+    counter++; 
+    }
     return errorCode;
 }

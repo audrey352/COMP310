@@ -5,11 +5,10 @@ Works:
 1.2.1 echo ✓ 
 1.2.2 batch mode ✓
 1.2.3 my_ls, my_mkdir, my_touch, my_cd
-
+1.2.4 One-liners
 
 To do:
 ------
-one liners (chained instructions)
 run
 
 
@@ -29,6 +28,10 @@ all satisfy the criterias in instructions
 Note - more general error handling?? not checking if dir already exists when using my_mkdir,
         not checking if file already exists, etc
 
+one-liners:
+Essentially works by usings strtok with delimeter ';' and feeds that into the interpreter instead
+of the whole input at once. If more than 10 instructions are input it just ends after the 10th instruction
+is completed. 
 
 General notes:
 RUN & WRITE CODE IN project/src, NOT in starter-code !!

@@ -43,6 +43,7 @@ int interpreter(char *command_args[], int args_size) {
     if (args_size < 1 || args_size > MAX_ARGS_SIZE) {
         return badcommand();
     }
+    
 
     for (i = 0; i < args_size; i++) {   // terminate args at newlines
         command_args[i][strcspn(command_args[i], "\r\n")] = 0;
