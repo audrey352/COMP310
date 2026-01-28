@@ -6,10 +6,11 @@ Works:
 1.2.2 batch mode ✓
 1.2.3 my_ls, my_mkdir, my_touch, my_cd
 1.2.4 One-liners
+1.2.5 run
 
 To do:
 ------
-run
+test cases (write a small script to run them all automatically and check the difference with expected output)
 
 
 Completed:
@@ -33,5 +34,6 @@ Essentially works by usings strtok with delimeter ';' and feeds that into the in
 of the whole input at once. If more than 10 instructions are input it just ends after the 10th instruction
 is completed. 
 
-General notes:
-RUN & WRITE CODE IN project/src, NOT in starter-code !!
+run:
+run any shell command, it feeds whatever you give after run to your normal terminal and runs that!
+no max number of arguments

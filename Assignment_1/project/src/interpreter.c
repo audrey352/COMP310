@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <sys/wait.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -34,6 +36,7 @@ int my_ls();
 int my_mkdir(char *dirname); 
 int my_touch(char *filename);
 int my_cd(char *dirname);
+int run(char *command_args[]);
 
 
 // Interpret commands and their arguments
@@ -43,7 +46,7 @@ int interpreter(char *command_args[], int args_size) {
     if (args_size < 1 || args_size > MAX_ARGS_SIZE) {
         return badcommand();
     }
-    
+
 
     for (i = 0; i < args_size; i++) {   // terminate args at newlines
         command_args[i][strcspn(command_args[i], "\r\n")] = 0;
@@ -101,6 +104,10 @@ int interpreter(char *command_args[], int args_size) {
         if (args_size != 2) 
 		    return badcommand();
 	    return my_cd(command_args[1]);
+    } else if (strcmp(command_args[0], "run") == 0){
+        if (args_size < 2)  // at least one argument needed
+            return badcommand();
+        return run(command_args);
     } else
         return badcommand();
 }
@@ -269,5 +276,28 @@ int my_cd(char *dirname){
         return 1;  // error changing directory
     }
 
+    return 0;
+}
+
+int run(char *command_args[]){
+    // fork a new process
+    pid_t pid = fork();
+
+    // check if fork fails
+    if (pid < 0) {
+        perror("fork failed");
+        return 1;
+    }
+
+    // child process
+    if (pid == 0) { 
+        execvp(command_args[1], command_args + 1); // execute command after run command (in regular shell)
+        perror("exec failed"); // check if exec fails
+        exit(0); // exit child process
+    }
+    // parent process 
+    else {
+        wait(NULL); // wait for child to finish
+    }
     return 0;
 }
