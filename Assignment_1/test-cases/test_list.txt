@@ -1,0 +1,10 @@
+badcommand.txt
+echo.txt
+ls.txt
+mkdir.txt
+oneline2.txt
+oneline.txt
+prompt.txt
+run.txt
+set.txt
+source.txt
