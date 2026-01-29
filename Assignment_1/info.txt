@@ -8,10 +8,11 @@ Works:
 1.2.4 One-liners
 1.2.5 run
 
-To do:
+In progress:
 ------
 test cases (write a small script to run them all automatically and check the difference with expected output)
-
+I've written a script to do this and it runs well for 9/10, so just need to fix the last one. Will work on 
+it later today. 
 
 Completed:
 ----------
