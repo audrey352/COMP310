@@ -11,6 +11,7 @@ int parseInput(char ui[]);
 // Start of everything
 int main(int argc, char *argv[]) {
     printf("Shell version 1.5 created Dec 2025\n");
+    fflush(stdout); //Flush after printing so that the banner will always print first
 
     char prompt = '$';  				// Shell prompt
     char userInput[MAX_USER_INPUT];		// user's input stored here
