@@ -262,11 +262,13 @@ int my_touch(char *filename){
 }
 
 int my_cd(char *dirname){
-    // check if alphanumeric
-    for (int i = 0; dirname[i] != '\0'; i++) {
-        if (!isalnum(dirname[i])) {
-            printf("Bad command: my_cd\n");
-            return 1;  // non-alphanumeric character found
+    // check if alphanumeric, allow . and ..
+    if (!(strcmp(dirname, ".") == 0 || strcmp(dirname, "..") == 0)) {
+        for (int i = 0; dirname[i] != '\0'; i++) {
+            if (!isalnum(dirname[i])) {
+                printf("Bad command: my_cd\n");
+                return 1;  // non-alphanumeric character found
+            }
         }
     }
     
