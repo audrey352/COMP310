@@ -35,7 +35,8 @@ int main(int argc, char *argv[]) {
         if (fgets(userInput, MAX_USER_INPUT-1, stdin)==NULL){
             return 0;
         }
-
+	
+	//stores and parses user input
         errorCode = parseInput(userInput);
         if (errorCode == -1) exit(99);	// ignore all other errors
         memset(userInput, 0, sizeof(userInput));
@@ -52,7 +53,7 @@ int wordEnding(char c) {
 
 int parseInput(char inp[]) {
     //Using strtok command to split into different commands that we can parse and pass
-    const char *delim = ";";
+    const char *delim = ";"; 
     char *command; //current command we will work with
     command  = strtok(inp, delim); //split into first
 
@@ -76,6 +77,7 @@ int parseInput(char inp[]) {
         if (command[ix] == '\0') break;
         ix++; 
     }
+
     words[w] = NULL; //Making sure that it ends after w words
     
     errorCode = interpreter(words, w); //send command to the interpreter
