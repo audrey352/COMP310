@@ -1,0 +1,25 @@
+DUE February 27th
+
+Tasks:
+1.2.1 Scheduling Infrastructure : Due Saturday Feb 14
+	Code Loading - Alexia (Friday Morning)
+	PCB - Alexia (Friday Morning)
+	Ready Queue - Audrey
+	Scheduler Logic - Audrey
+	Cleanup - Alexia (Friday Afternoon?)
+1.2.2 Extend the OS Shell :  Due Wednesday Feb 18
+	Exec Command - Alexia (Monday)
+	Single Process - Alexia (Monday)
+	Multiprocess - Audrey (Wednesday)
+1.2.3 Scheduling Policy : 
+1.2.4 AJF with job aging : 
+1.2.5 Background Mode 
+	RR Policy
+	Execution in the background
+1.2.6 Multithreaded Scehduler
+Testcases
+
+Video (1.2.1 & 1.2.2)
+
+INFO & Notes:
+
