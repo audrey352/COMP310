@@ -1,10 +1,11 @@
 DUE February 27th
 Completed:
 Code Loading
+PCB
+
 
 Tasks:
 1.2.1 Scheduling Infrastructure : Due Saturday Feb 14
-	PCB - Alexia (Friday Morning)
 	Ready Queue - Audrey
 	Scheduler Logic - Audrey
 	Cleanup - Alexia (Friday Afternoon?)
@@ -28,3 +29,11 @@ add_line, get_line and load_program to add lines to the program memory, get line
 from it and insert a whole program from a file. Not sure if we need an program_init
 function but choose to leave it for now. I'm also not sure how to test this but
 it compiles for now so I think it alright?
+
+PCB: Just defined a struct that holds ints for PID, start index, program_length and 
+program counter. I changed the load program function to return where it put it as 
+its start instead of where it ends. I'm also not sure which program we're relying
+on to know the program length and I think we may need to edit some of the code loading
+functions in the future because maybe they should compute the length instead... and as of
+right now it won't catch errors where the array runs out of memory (at least not gracefully).
+

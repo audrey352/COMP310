@@ -90,8 +90,10 @@ char* get_line(int index){
 }
 
 //load_program will attempt to write to the array until either there are 
-//no more lines to write or the array runs out of space. 
+//no more lines to write or the array runs out of space. It returns where
+//the program started as well.  
 int load_program(FILE* f){
+	int program_start = program_index;
 	int space = 1;
 	char buffer[MAX_LINE_LENGTH];
 	
@@ -99,6 +101,13 @@ int load_program(FILE* f){
 		space = add_line(buffer);
 	}
 
-	return space;
+	return program_start;
 }
 
+
+struct pcb {
+	int PID;
+	int start;
+	int program_counter;
+	int program_length;
+};
