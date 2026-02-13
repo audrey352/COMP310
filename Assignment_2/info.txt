@@ -2,12 +2,12 @@ DUE February 27th
 Completed:
 Code Loading
 PCB
+Ready Queue
+Scheduler Logic
 
 
 Tasks:
 1.2.1 Scheduling Infrastructure : Due Saturday Feb 14
-	Ready Queue - Audrey
-	Scheduler Logic - Audrey
 	Cleanup - Alexia (Friday Afternoon?)
 1.2.2 Extend the OS Shell :  Due Wednesday Feb 18
 	Exec Command - Alexia (Monday)
@@ -37,3 +37,12 @@ on to know the program length and I think we may need to edit some of the code l
 functions in the future because maybe they should compute the length instead... and as of
 right now it won't catch errors where the array runs out of memory (at least not gracefully).
 
+New stuff: 
+- added an enqueue and dequeue functions to update the ready_queue. 
+- updated source in interpreter.c to load script, create a pcb, add to ready queue, and run the whole queue
+- moved pcb and ready_queue structs to .h
+
+source cleanup: need to remove code lines from program_storage after the program is done running
+
+Note: I'm wondering if we should add these structs to their own .c/.h file to keep our code organized?
+expecially if we need to write a bunch of helper functions to work with them

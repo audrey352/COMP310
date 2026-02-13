@@ -354,30 +354,72 @@ int cd(char *path) {
     return 0;
 }
 
+// OLD SOURCE FCT
+// int source(char *script) {
+//     int errCode = 0;
+//     char line[MAX_USER_INPUT];
+//     FILE *p = fopen(script, "rt");      // the program is in a file
+
+//     if (p == NULL) {
+//         return badcommandFileDoesNotExist();
+//     }
+
+//     fgets(line, MAX_USER_INPUT - 1, p);
+//     while (1) {
+//         errCode = parseInput(line);     // which calls interpreter()
+//         memset(line, 0, sizeof(line));
+
+//         if (feof(p)) {
+//             break;
+//         }
+//         fgets(line, MAX_USER_INPUT - 1, p);
+//     }
+
+//     fclose(p);
+
+//     return errCode;
+// }
+
 int source(char *script) {
     int errCode = 0;
-    char line[MAX_USER_INPUT];
     FILE *p = fopen(script, "rt");      // the program is in a file
 
+    // Make sure file exists
     if (p == NULL) {
         return badcommandFileDoesNotExist();
     }
 
-    fgets(line, MAX_USER_INPUT - 1, p);
-    while (1) {
-        errCode = parseInput(line);     // which calls interpreter()
-        memset(line, 0, sizeof(line));
+    // Load script into program storage
+    int program_start = load_program(p);
 
-        if (feof(p)) {
-            break;
-        }
-        fgets(line, MAX_USER_INPUT - 1, p);
-    }
-
+    // Create PCB for new program and add to ready-queue
+    PCB *pcb = malloc(sizeof(PCB));
+    pcb->PID = next_pid++;
+    pcb->start = program_start;
+    pcb->program_counter = program_start;  // start executing at the first instruction
+    pcb->program_length = program_index - program_start;  //  tracks where the next empty line is in program storage
+    pcb->next = NULL;
+    enqueue(pcb);
     fclose(p);
+
+    // Run queue until empty (using FCFS scheduling)
+    while (ready_queue.head != NULL) {
+        PCB *current_pcb = dequeue(); // remove head of queue
+        
+        // go through program lines
+        while (current_pcb->program_counter < current_pcb->start + current_pcb->program_length) {
+            char *line = get_line(current_pcb->program_counter);
+            parseInput(line);  // execute instruction
+            current_pcb->program_counter++;  // go to next instruction
+        }
+
+        free(current_pcb);
+        // CLEANUP: REMOVE PROGRAM FROM SHELL MEMORY (STORAGE)
+    }
 
     return errCode;
 }
+
 
 int run(char *args[], int arg_size) {
     // copy the args into a new NULL-terminated array.
