@@ -1,8 +1,9 @@
 DUE February 27th
+Completed:
+Code Loading
 
 Tasks:
 1.2.1 Scheduling Infrastructure : Due Saturday Feb 14
-	Code Loading - Alexia (Friday Morning)
 	PCB - Alexia (Friday Morning)
 	Ready Queue - Audrey
 	Scheduler Logic - Audrey
@@ -22,4 +23,8 @@ Testcases
 Video (1.2.1 & 1.2.2)
 
 INFO & Notes:
-
+Code Loading: Made an array in shellmemory with 1000 spots and wrote functions
+add_line, get_line and load_program to add lines to the program memory, get lines 
+from it and insert a whole program from a file. Not sure if we need an program_init
+function but choose to leave it for now. I'm also not sure how to test this but
+it compiles for now so I think it alright?

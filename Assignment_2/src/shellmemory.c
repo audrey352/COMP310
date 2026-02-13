@@ -67,3 +67,38 @@ char *mem_get_value(char *var_in) {
     }
     return NULL;
 }
+
+//Initaliaze a big array to store all programs
+char *program_storage[MAX_STORAGE_LINES];
+int program_index = 0;
+
+//Add line allows you to add lines to the program.
+//Before adding the line, it ensures that the index does not exceed max 
+//number of lines allowed (returns -1 for error if that is the case)
+int add_line(char *line) {
+	if (program_index ==  MAX_STORAGE_LINES){
+		return -1;
+	}
+	program_storage[program_index] = strdup(line);
+	return program_index++;
+}
+
+
+//get line simply returns the next line in the array
+char* get_line(int index){
+	return program_storage[index];
+}
+
+//load_program will attempt to write to the array until either there are 
+//no more lines to write or the array runs out of space. 
+int load_program(FILE* f){
+	int space = 1;
+	char buffer[MAX_LINE_LENGTH];
+	
+	while (fgets(buffer, MAX_LINE_LENGTH, f) && space > 0){
+		space = add_line(buffer);
+	}
+
+	return space;
+}
+
