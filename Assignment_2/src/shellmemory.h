@@ -15,7 +15,7 @@ void mem_set_value(char *var, char *value);
 
 int add_line(char *line);
 char* get_line(int index);
-int load_program(FILE *f);
+int load_program(FILE *f, int* length_out);
 
 typedef struct pcb {
 	int PID;

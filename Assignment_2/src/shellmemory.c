@@ -93,14 +93,17 @@ char* get_line(int index){
 //load_program will attempt to write to the array until either there are 
 //no more lines to write or the array runs out of space. It returns where
 //the program started as well.  
-int load_program(FILE* f){
+int load_program(FILE* f, int* length_out){
 	int program_start = program_index;
+	int count = 0;
 	int space = 1;
 	char buffer[MAX_LINE_LENGTH];
 	
 	while (fgets(buffer, MAX_LINE_LENGTH, f) && space > 0){
 		space = add_line(buffer);
+		count++;
 	}
+	*length_out = count;
 
 	return program_start;
 }

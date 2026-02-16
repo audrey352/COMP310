@@ -389,18 +389,27 @@ int source(char *script) {
         return badcommandFileDoesNotExist();
     }
 
+    int length;
     // Load script into program storage
-    int program_start = load_program(p);
+    int program_start = load_program(p, &length);
 
     // Create PCB for new program and add to ready-queue
     PCB *pcb = malloc(sizeof(PCB));
     pcb->PID = next_pid++;
     pcb->start = program_start;
     pcb->program_counter = program_start;  // start executing at the first instruction
-    pcb->program_length = program_index - program_start;  //  tracks where the next empty line is in program storage
+    pcb->program_length = length;  //  tracks where the next empty line is in program storage
     pcb->next = NULL;
     enqueue(pcb);
     fclose(p);
+
+    printf("PCB CREATED: PID=%d start=%d length=%d pc=%d end=%d\n",
+       pcb->PID,
+       pcb->start,
+       pcb->program_length,
+       pcb->program_counter,
+       pcb->start + pcb->program_length);
+
 
     // Run queue until empty (using FCFS scheduling)
     while (ready_queue.head != NULL) {
@@ -413,8 +422,12 @@ int source(char *script) {
             current_pcb->program_counter++;  // go to next instruction
         }
 
-        free(current_pcb);
         // CLEANUP: REMOVE PROGRAM FROM SHELL MEMORY (STORAGE)
+	for (int i = current_pcb->start; i < current_pcb->start + current_pcb->program_length; i++) {
+		free(program_storage[i]);
+		program_storage[i] = NULL;
+	}
+	free(current_pcb);	
     }
 
     return errCode;
