@@ -68,9 +68,9 @@ char *mem_get_value(char *var_in) {
     return NULL;
 }
 
-//Initaliaze a big array to store all programs
+//Initialize a big array to store all programs
 char *program_storage[MAX_STORAGE_LINES];
-int program_index = 0;
+int program_index = 0;  // tracks where the next empty line is in program storage
 int next_pid = 1;  // global counter for assigning unique PIDs
 
 //Add line allows you to add lines to the program.
@@ -96,13 +96,12 @@ char* get_line(int index){
 int load_program(FILE* f, int* length_out){
 	int program_start = program_index;
 	int count = 0;
-	int space = 1;
 	char buffer[MAX_LINE_LENGTH];
 	
-	while (fgets(buffer, MAX_LINE_LENGTH, f) && space > 0){
-		space = add_line(buffer);
-		count++;
-	}
+	while (fgets(buffer, MAX_LINE_LENGTH, f)){
+	if (add_line(buffer) < 0) break;   // stop if memory full
+        count++;
+    }
 	*length_out = count;
 
 	return program_start;

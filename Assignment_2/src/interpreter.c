@@ -382,16 +382,23 @@ int cd(char *path) {
 
 int source(char *script) {
     int errCode = 0;
-    FILE *p = fopen(script, "rt");      // the program is in a file
+    FILE *p = fopen(script, "rt");  // the program is in a file
 
     // Make sure file exists
     if (p == NULL) {
         return badcommandFileDoesNotExist();
     }
 
-    int length;
     // Load script into program storage
+    int length;
     int program_start = load_program(p, &length);
+
+    // CHECK FOR LOAD ERROR
+    // printf("\n--- PROGRAM STORAGE ---\n");
+    // for (int i = program_start; i < program_start + length; i++) {
+    //     printf("LINE %d: %s", i, program_storage[i]);
+    // }
+    // printf("-----------------------\n");
 
     // Create PCB for new program and add to ready-queue
     PCB *pcb = malloc(sizeof(PCB));
@@ -403,13 +410,13 @@ int source(char *script) {
     enqueue(pcb);
     fclose(p);
 
-    printf("PCB CREATED: PID=%d start=%d length=%d pc=%d end=%d\n",
-       pcb->PID,
-       pcb->start,
-       pcb->program_length,
-       pcb->program_counter,
-       pcb->start + pcb->program_length);
-
+    // CHECK FOR PCB CREATION ERROR
+    // printf("PCB CREATED: PID=%d start=%d length=%d pc=%d end=%d\n",
+    //    pcb->PID,
+    //    pcb->start,
+    //    pcb->program_length,
+    //    pcb->program_counter,
+    //    pcb->start + pcb->program_length);
 
     // Run queue until empty (using FCFS scheduling)
     while (ready_queue.head != NULL) {
@@ -422,7 +429,7 @@ int source(char *script) {
             current_pcb->program_counter++;  // go to next instruction
         }
 
-        // CLEANUP: REMOVE PROGRAM FROM SHELL MEMORY (STORAGE)
+    // Cleanup: remove program from storage and free PCB
 	for (int i = current_pcb->start; i < current_pcb->start + current_pcb->program_length; i++) {
 		free(program_storage[i]);
 		program_storage[i] = NULL;
