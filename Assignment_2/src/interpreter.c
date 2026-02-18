@@ -55,6 +55,7 @@ int touch(char *path);
 int cd(char *path);
 int source(char *script);
 int run(char *args[], int args_size);
+int exec(char* args[], int args_size);
 int badcommandFileDoesNotExist();
 
 // Interpret commands and their arguments
@@ -137,7 +138,27 @@ int interpreter(char *command_args[], int args_size) {
         if (args_size < 2)
             return badcommand();
         return run(&command_args[1], args_size - 1);
+    } else if (strcmp(command_args[0], "exec") == 0){
+	if (args_size < 3 || args_size > 5){
+		return badcommand();
+	}
 
+	if (command_args == NULL){
+		printf("Command_args is null\n");
+		return 1;
+	}
+
+	char *args[10];
+	//printf("Created array\n");
+
+	for (int i = 0 ; i < (args_size - 1) ; i++){
+	//	printf("Looping: %d\n", i);
+		args[i] = command_args[i+1];
+	}
+	//printf("done looping \n");	
+	args[(args_size -1 )] = NULL;
+	return exec(args, args_size-1);
+    
     } else
         return badcommand();
 }
@@ -477,3 +498,35 @@ int run(char *args[], int arg_size) {
 
     return 0;
 }
+
+int exec(char *args[], int args_size){
+	char* policy;
+	policy = args[args_size -1 ];
+	
+	int err_code = 0; 
+	
+	char* prog1;
+	prog1 = args[0];
+
+	if (args_size == 2){
+		err_code = source(prog1);
+		return err_code;
+	}
+	
+	if (strcmp(policy, "FCFS") == 0){
+		printf("Running FCFS policy");
+	} else if (strcmp(policy, "SJF") == 0) {
+		printf("Running SJR policy");
+	} else if (strcmp(policy, "RR") == 0){
+		printf("Runnign RR policy");
+	} else if (strcmp(policy, "AGING") == 0) {
+	       printf("Running AGING policy");
+	} else {
+ 		printf("Invalid Policy: %s, \n", policy);  		
+	}
+
+	return err_code;
+}
+
+
+
