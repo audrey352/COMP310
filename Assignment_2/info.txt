@@ -4,14 +4,12 @@ Code Loading
 PCB
 Ready Queue
 Scheduler Logic
-
+Cleanup
+Exec Command
+Single Process
 
 Tasks:
-1.2.1 Scheduling Infrastructure : Due Saturday Feb 14
-	Cleanup - Alexia (Friday Afternoon?)
 1.2.2 Extend the OS Shell :  Due Wednesday Feb 18
-	Exec Command - Alexia (Monday)
-	Single Process - Alexia (Monday)
 	Multiprocess - Audrey (Wednesday)
 1.2.3 Scheduling Policy : 
 1.2.4 AJF with job aging : 
@@ -43,6 +41,12 @@ New stuff:
 - moved pcb and ready_queue structs to .h
 
 source cleanup: need to remove code lines from program_storage after the program is done running
+
+Exec Command: Added exec command. A bit confused about the program behavior when there is only single process (for now I 
+just have it call the source command but i don't really understand wether thats the correct behavior- the instructions 
+say that it's not a special case so not sure what to do or what to implement). 
+I had the different types of processes in a if statement chain so that we can choose behavior for each type of processing. 
+I'm not sure if thats the correct implementation but I was very confused about the implementation they describe in instructions. 
 
 Note: I'm wondering if we should add these structs to their own .c/.h file to keep our code organized?
 expecially if we need to write a bunch of helper functions to work with them
