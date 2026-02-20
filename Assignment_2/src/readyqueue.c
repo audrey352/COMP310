@@ -90,3 +90,20 @@ PCB* dequeue_head() {
 
     return pcb;  // return dequeued PCB
 }
+
+//Helper function for updating the job score
+int update_job_score(PCB *pcb){
+	int err_code = 0;
+	int prev_job_score = pcb->job_score;
+	if (prev_job_score < 0){
+	       err_code = -1; //It should never be less than 0 so return an error code if so
+	} else if (prev_job_score > 0){
+		pcb->job_score = prev_job_score - 1; //If it's greater than 0, subtract 1.
+	}
+	//Otherwise do nothing (keep at 0).
+	return err_code;
+}
+
+		
+
+

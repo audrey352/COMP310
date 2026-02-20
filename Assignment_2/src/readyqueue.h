@@ -24,4 +24,5 @@ void enqueue_tail(PCB *pcb);
 void enqueue_sjf(PCB *pcb);
 PCB* dequeue_head();
 
+int update_job_score(PCB* pcb);
 #endif
