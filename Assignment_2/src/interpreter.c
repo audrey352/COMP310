@@ -22,6 +22,7 @@
 
 #include "shellmemory.h"
 #include "shell.h"
+#include "readyqueue.h"
 
 int badcommand() {
     printf("Unknown Command\n");
@@ -156,7 +157,7 @@ int interpreter(char *command_args[], int args_size) {
 		args[i] = command_args[i+1];
 	}
 	//printf("done looping \n");	
-	args[(args_size -1 )] = NULL;
+	args[(args_size - 1)] = NULL;
 	return exec(args, args_size-1);
     
     } else
@@ -375,31 +376,6 @@ int cd(char *path) {
     return 0;
 }
 
-// OLD SOURCE FCT
-// int source(char *script) {
-//     int errCode = 0;
-//     char line[MAX_USER_INPUT];
-//     FILE *p = fopen(script, "rt");      // the program is in a file
-
-//     if (p == NULL) {
-//         return badcommandFileDoesNotExist();
-//     }
-
-//     fgets(line, MAX_USER_INPUT - 1, p);
-//     while (1) {
-//         errCode = parseInput(line);     // which calls interpreter()
-//         memset(line, 0, sizeof(line));
-
-//         if (feof(p)) {
-//             break;
-//         }
-//         fgets(line, MAX_USER_INPUT - 1, p);
-//     }
-
-//     fclose(p);
-
-//     return errCode;
-// }
 
 int source(char *script) {
     int errCode = 0;
@@ -411,33 +387,13 @@ int source(char *script) {
     }
 
     // Load script into program storage
-    int length;
-    int program_start = load_program(p, &length);
-
-    // CHECK FOR LOAD ERROR
-    // printf("\n--- PROGRAM STORAGE ---\n");
-    // for (int i = program_start; i < program_start + length; i++) {
-    //     printf("LINE %d: %s", i, program_storage[i]);
-    // }
-    // printf("-----------------------\n");
+    int program_length;
+    int program_start = load_program(p, &program_length);
 
     // Create PCB for new program and add to ready-queue
-    PCB *pcb = malloc(sizeof(PCB));
-    pcb->PID = next_pid++;
-    pcb->start = program_start;
-    pcb->program_counter = program_start;  // start executing at the first instruction
-    pcb->program_length = length;  //  tracks where the next empty line is in program storage
-    pcb->next = NULL;
+    PCB *pcb = create_pcb(program_start, program_length);
     enqueue(pcb);
     fclose(p);
-
-    // CHECK FOR PCB CREATION ERROR
-    // printf("PCB CREATED: PID=%d start=%d length=%d pc=%d end=%d\n",
-    //    pcb->PID,
-    //    pcb->start,
-    //    pcb->program_length,
-    //    pcb->program_counter,
-    //    pcb->start + pcb->program_length);
 
     // Run queue until empty (using FCFS scheduling)
     while (ready_queue.head != NULL) {
@@ -501,7 +457,7 @@ int run(char *args[], int arg_size) {
 
 int exec(char *args[], int args_size){
 	char* policy;
-	policy = args[args_size -1 ];
+	policy = args[args_size - 1];
 	
 	int err_code = 0; 
 	
