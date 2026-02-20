@@ -12,7 +12,7 @@ PCB* create_pcb(int program_start, int program_length) {
     pcb->program_counter = program_start;  // start executing at the first instruction
     pcb->program_length = program_length;
     pcb->next = NULL;
-
+    pcb->job_score = program_length;
     return pcb;
 }
 

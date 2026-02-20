@@ -7,6 +7,7 @@ typedef struct pcb {
 	int program_counter;  // index of the next instruction to execute in program storage
 	int program_length;  // number of lines in the program
     struct pcb* next;  // pointer to the next PCB in the ready queue
+	int job_score;
 } PCB;
 
 typedef struct ready_queue {
