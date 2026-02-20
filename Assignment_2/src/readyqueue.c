@@ -80,19 +80,20 @@ void enqueue_aging(PCB *pcb){
 
     	// find the first PCB in the queue with a larger job score
     	// if equal length, insert after
-    	while (current != NULL && current->job_score <= pcb_job_score) {
+    	while (current != NULL && current->job_score < pcb_job_score) {
         	previous = current;
         	current = current->next;
     	}
 
     	// Insert new PCB between previous and current
-    	pcb->next = current;
+	pcb->next = current;
     	if (previous == NULL) {
         	ready_queue.head = pcb;  // inserting at head
     	}
     	else {
         	previous->next = pcb;  // link previous to new PCB
     	}
+
     	if (current == NULL) ready_queue.tail = pcb;  // inserting at tail
 
     	return;

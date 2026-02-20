@@ -528,7 +528,7 @@ int exec(char *args[], int args_size){
 
     // Preemptive policies (RR and AGING)  ** ONLY RR IMPLEMENTED **
     else if (preemptive == 1) {
-	if (preemptive_switch = 1){
+	if (preemptive_switch == 1){
         while (ready_queue.head != NULL) {
             PCB *current_pcb = dequeue_func(); 
             int end_of_program = current_pcb->start + current_pcb->program_length;
@@ -551,20 +551,25 @@ int exec(char *args[], int args_size){
         }
 	} else{
 	//Aging:
+	//printf("Running Aging Policy");
 	while (ready_queue.head != NULL) {
 		PCB *current_pcb = dequeue_func();
 		int lines_run = 0 ; //time quantum 1
-		int end_of_program = current_pcb ->start + current_pcb->program_length;
-		
+		int end_of_program = current_pcb->start + current_pcb->program_length;
+	 	
+			
 		while (lines_run < 1 && current_pcb->program_counter < end_of_program){
 			char *line = get_line(current_pcb->program_counter);
+			printf("Ran line: ");
 			parseInput(line);
+			printf("from program: %d, with job scored: %d\n", current_pcb->PID, current_pcb->job_score);
 			current_pcb->program_counter++;
 			lines_run++;
 			
 			//Update all job queues left in list
-			PCB* queued_pcb = current_pcb->next;
+			PCB* queued_pcb = ready_queue.head;
 			while (queued_pcb != NULL){
+				int queued_pid = queued_pcb->PID;
 				update_job_score(queued_pcb);
 				queued_pcb = queued_pcb->next;	}
 		}
@@ -572,6 +577,7 @@ int exec(char *args[], int args_size){
 		//Decide wether to swap out or not:
 		if (current_pcb->program_counter < end_of_program){
 			enqueue_func(current_pcb);
+			printf("First item in queue is: %d \n", ready_queue.head->PID);
 		} else{
 			pcb_cleanup(current_pcb);
 		}
