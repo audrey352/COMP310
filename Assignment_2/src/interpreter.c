@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>              // tolower, isdigit
 #include <dirent.h>             // scandir
 #include <unistd.h>             // chdir
@@ -378,26 +379,19 @@ int cd(char *path) {
 
 
 int source(char *script) {
-    int errCode = 0;
-    FILE *p = fopen(script, "rt");  // the program is in a file
-
-    // Make sure file exists
-    if (p == NULL) {
-        return badcommandFileDoesNotExist();
-    }
-
     // Load script into program storage
     int program_length;
-    int program_start = load_program(p, &program_length);
+    int program_start;
+    if (load_program(script, &program_length, &program_start) != 0)
+        return badcommandFileDoesNotExist();
 
     // Create PCB for new program and add to ready-queue
     PCB *pcb = create_pcb(program_start, program_length);
-    enqueue(pcb);
-    fclose(p);
+    enqueue_tail(pcb);
 
-    // Run queue until empty (using FCFS scheduling)
+    // Run ready queue until empty (using FCFS scheduling)
     while (ready_queue.head != NULL) {
-        PCB *current_pcb = dequeue(); // remove head of queue
+        PCB *current_pcb = dequeue_head(); // remove head from queue
         
         // go through program lines
         while (current_pcb->program_counter < current_pcb->start + current_pcb->program_length) {
@@ -406,15 +400,10 @@ int source(char *script) {
             current_pcb->program_counter++;  // go to next instruction
         }
 
-    // Cleanup: remove program from storage and free PCB
-	for (int i = current_pcb->start; i < current_pcb->start + current_pcb->program_length; i++) {
-		free(program_storage[i]);
-		program_storage[i] = NULL;
-	}
-	free(current_pcb);	
+        pcb_cleanup(current_pcb);  // remove program from storage and free PCB
     }
 
-    return errCode;
+    return 0;
 }
 
 
@@ -455,33 +444,110 @@ int run(char *args[], int arg_size) {
     return 0;
 }
 
+
+bool has_duplicate_files(char *files[], int num_files) {
+    for (int i = 0; i < num_files - 1; i++) {
+        for (int j = i + 1; j < num_files; j++) {
+            if (strcmp(files[i], files[j]) == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
 int exec(char *args[], int args_size){
 	char* policy;
-	policy = args[args_size - 1];
-	
-	int err_code = 0; 
-	
-	char* prog1;
-	prog1 = args[0];
+    int num_programs = args_size - 1;
+	policy = args[num_programs];
+    int prog_lengths[num_programs];
+    int prog_starts[num_programs];
 
-	if (args_size == 2){
-		err_code = source(prog1);
-		return err_code;
-	}
-	
-	if (strcmp(policy, "FCFS") == 0){
-		printf("Running FCFS policy");
+    // Each exec argument is the name of a different script filename. If two exec arguments are identical, 
+    // the shell has to display an error (of your choice) and exec must terminate, returning the command 
+    // prompt to the user (or keep running the remaining instructions, if in batch mode)
+    if (args_size > 2 && has_duplicate_files(args, num_programs)) {
+        fprintf(stderr, "Error: Duplicate program files provided to exec.\n");
+        return 1;
+    }
+
+    // Check that policy is valid & set enqueue function
+    void (*enqueue_func)(PCB *);
+    PCB* (*dequeue_func)();
+    dequeue_func = dequeue_head;  // always dequeue from head, keep queues sorted based on policy when enqueuing
+    int preemptive;
+
+    if (strcmp(policy, "FCFS") == 0){
+        enqueue_func = enqueue_tail;
+        preemptive = 0;
 	} else if (strcmp(policy, "SJF") == 0) {
-		printf("Running SJR policy");
+		enqueue_func = enqueue_sjf;
+        preemptive = 0;
 	} else if (strcmp(policy, "RR") == 0){
-		printf("Runnign RR policy");
+		enqueue_func = enqueue_tail;
+        preemptive = 1;
 	} else if (strcmp(policy, "AGING") == 0) {
-	       printf("Running AGING policy");
+        // enqueue_func = enqueue_aging;  IMPLEMENT IN READY_QUEUE.C
+        preemptive = 1;
 	} else {
- 		printf("Invalid Policy: %s, \n", policy);  		
+ 		fprintf(stderr, "Invalid Policy: %s, \n", policy);
+        return 1; 		
 	}
 
-	return err_code;
+    // Load all programs into memory
+    for (int i = 0; i < (num_programs); i++){
+        int err_code; 
+        if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i])) != 0)
+            return err_code;  // stop if any program doesn't exist or memory is full
+    }
+
+    // Create & enqueue all PCBs (only if all programs loaded successfully)
+    for (int i = 0; i < (num_programs); i++){
+        PCB *pcb = create_pcb(prog_starts[i], prog_lengths[i]);
+        enqueue_func(pcb);
+    }
+
+    // Non-preemptive policies (FCFS and SJF)
+    if (preemptive == 0) {
+        while (ready_queue.head != NULL) {
+            PCB *current_pcb = dequeue_func(); 
+            
+            // Run full program without preemption
+            while (current_pcb->program_counter < current_pcb->start + current_pcb->program_length) {
+                char *line = get_line(current_pcb->program_counter);
+                parseInput(line);  // execute instruction
+                current_pcb->program_counter++;  // go to next instruction
+            }
+            pcb_cleanup(current_pcb);  // remove program from storage and free PCB
+        }
+    }
+
+    // Preemptive policies (RR and AGING)  ** ONLY RR IMPLEMENTED **
+    else if (preemptive == 1) {
+        while (ready_queue.head != NULL) {
+            PCB *current_pcb = dequeue_func(); 
+            int end_of_program = current_pcb->start + current_pcb->program_length;
+            
+            // RR: run 2 lines of the program
+            int lines_run = 0;
+            while (lines_run < 2 && current_pcb->program_counter < end_of_program) {
+                char *line = get_line(current_pcb->program_counter);
+                parseInput(line);  // execute instruction
+                current_pcb->program_counter++;  // go to next instruction
+                lines_run++;
+            }
+
+            // Add to end of queue if not finished, otherwise clean up PCB and program storage
+            if (current_pcb->program_counter < end_of_program) {
+                enqueue_func(current_pcb);
+            } else {
+                pcb_cleanup(current_pcb);
+            }
+        }
+    }
+
+	return 0;
 }
 
 

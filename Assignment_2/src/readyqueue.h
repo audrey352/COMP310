@@ -17,8 +17,10 @@ typedef struct ready_queue {
 extern ReadyQueue ready_queue;  // global ready queue
 
 PCB* create_pcb(int program_start, int program_length);
-void enqueue(PCB *pcb);
-PCB* dequeue();
+int pcb_cleanup(PCB *pcb);
 
+void enqueue_tail(PCB *pcb); 
+void enqueue_sjf(PCB *pcb);
+PCB* dequeue_head();
 
 #endif

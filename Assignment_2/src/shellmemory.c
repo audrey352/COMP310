@@ -90,19 +90,31 @@ char* get_line(int index){
 	return program_storage[index];
 }
 
-//load_program will attempt to write to the array until either there are 
-//no more lines to write or the array runs out of space. It returns where
-//the program started as well.  
-int load_program(FILE* f, int* length_out){
-	int program_start = program_index;
+// load program line by line into memory. 
+// Returns 0 on success, and 1 if the file doesn't exist or the program is too long to fit in memory. 
+int load_program(char *script, int* length_out, int* start_out) {
+    // Open file & make sure it exists
+    FILE *f = fopen(script, "rt");
+    if (f == NULL) {;
+        return 1;
+    }
+
+    // program info 
+    *start_out = program_index;
 	int count = 0;
 	char buffer[MAX_LINE_LENGTH];
 	
+    // read lines until end of file
 	while (fgets(buffer, MAX_LINE_LENGTH, f)){
-	if (add_line(buffer) < 0) break;   // stop if memory full
+        if (add_line(buffer) < 0) {  // stop if memory full
+            fprintf(stderr, "Program too long to fit in memory: %s\n", script);
+            fclose(f);
+            return 1;
+        }
         count++;
     }
-	*length_out = count;
 
-	return program_start;
+    fclose(f);
+    *length_out = count;
+	return 0;
 }

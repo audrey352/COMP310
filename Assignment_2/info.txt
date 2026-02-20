@@ -7,18 +7,16 @@ Scheduler Logic
 Cleanup
 Exec Command
 Single Process
+Multiprocess
+Adding Scheduling Policies
 
 Tasks:
-1.2.2 Extend the OS Shell :  Due Wednesday Feb 18
-	Multiprocess - Audrey (Wednesday)
-1.2.3 Scheduling Policy : 
-1.2.4 AJF with job aging : 
+1.2.4 AJF with job aging
 1.2.5 Background Mode 
 	RR Policy
 	Execution in the background
 1.2.6 Multithreaded Scehduler
 Testcases
-
 Video (1.2.1 & 1.2.2)
 
 INFO & Notes:
@@ -35,7 +33,7 @@ on to know the program length and I think we may need to edit some of the code l
 functions in the future because maybe they should compute the length instead... and as of
 right now it won't catch errors where the array runs out of memory (at least not gracefully).
 
-New stuff: 
+New: 
 - added an enqueue and dequeue functions to update the ready_queue. 
 - updated source in interpreter.c to load script, create a pcb, add to ready queue, and run the whole queue
 - moved pcb and ready_queue structs to .h
@@ -48,5 +46,27 @@ say that it's not a special case so not sure what to do or what to implement).
 I had the different types of processes in a if statement chain so that we can choose behavior for each type of processing. 
 I'm not sure if thats the correct implementation but I was very confused about the implementation they describe in instructions. 
 
-Note: I'm wondering if we should add these structs to their own .c/.h file to keep our code organized?
-expecially if we need to write a bunch of helper functions to work with them
+Exec w/ Policies: implemented for everything except for the aging policy. The loop where 
+it's supposed to go (RR) will have to change a bit. I'm implementing this by always dequeuing from the head of the queue,
+and then there are different enqueue functions for different policies. This way we always have a sorted queue (which we need for aging I think).
+One assumption I'm making right now is that there's only one exec running at once so no new programs get added after the first enqueue.
+Also for SJF, if 2 programs have the same length when they get enqueued, I made the choice to add the most recent one after.
+
+Other new changes:
+- moved ready queue and pcb to readyqueue.c file
+- load_program function now opens the script and checks if file exists + error if memory is too small
+- created a pcb cleanup function to remove the program from storage  **dequeue is what disconnects pcb from ready queue
+- added the prog1-2-3 files they give as examples in the src folder to test the policies easily
+
+QUESTION: im confused if SJF is pre emptive or not?? I think i implemented the non pre empted version since the programs dont get 
+		 switched out when new ones join the queue (ie if it starts running it fully runs), which is differnt from the example she had done in class (jan 13)
+
+Not fully sure I'm interpreting this correctly: "You will have the easiest time if you structure your code 
+around  these  two  differences.  Have  only  one  (a  bit  tricky)  or  two  (we  found  this  easier)  loops 
+executing program code. If using two loops, one is for policies that are non-preemptive, and the 
+other is for preemptive policies. Use configurable variables to decide when to preempt processes, 
+and to decide which policy’s enqueue/dequeue functions should be used. (The reference solution 
+sets the enqueue/dequeue functions using variables with function pointers. However, that is not 
+required, and there are plenty of other reasonable ways to do this.)"
+
+NEED TO: re-download test case folder since they said it had issues

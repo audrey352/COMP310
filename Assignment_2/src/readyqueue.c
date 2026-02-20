@@ -16,13 +16,27 @@ PCB* create_pcb(int program_start, int program_length) {
     return pcb;
 }
 
+// Function to clean up a PCB and free its resources
+// NOT removing from queue (should be done beforehand)
+int pcb_cleanup(PCB *pcb) {
+    // free the lines of the program from storage
+    for (int i = pcb->start; i < pcb->start + pcb->program_length; i++) {
+        free(program_storage[i]);
+        program_storage[i] = NULL;
+    }
+    free(pcb);
+    return 0;
+}
+
+
 // Initializing global ready queue 
 ReadyQueue ready_queue = {NULL, NULL};
 
-// Enqueue and Dequeue functions for ready queue
-void enqueue(PCB *pcb) {
+
+// Enqueue functions
+void enqueue_tail(PCB *pcb) {
     // if queue empty, head and tail both point to the new PCB
-    if (ready_queue.tail == NULL) {
+    if (ready_queue.tail == NULL && ready_queue.head == NULL) {
         ready_queue.head = pcb;
         ready_queue.tail = pcb;
     } 
@@ -34,7 +48,35 @@ void enqueue(PCB *pcb) {
     return;
 }
 
-PCB* dequeue() {
+void enqueue_sjf(PCB *pcb) {
+    int pcb_length = pcb->program_length;
+    PCB *current = ready_queue.head;
+    PCB *previous = NULL;
+
+    // find the first PCB in the queue with a longer program length
+    // if equal length, insert after
+    while (current != NULL && current->program_length <= pcb_length) {
+        previous = current;
+        current = current->next;
+    }
+
+    // Insert new PCB between previous and current 
+    pcb->next = current;
+    if (previous == NULL) {
+        ready_queue.head = pcb;  // inserting at head
+    } 
+    else {
+        previous->next = pcb;  // link previous to new PCB
+    }
+    if (current == NULL) ready_queue.tail = pcb;  // inserting at tail
+
+    return;
+}
+
+
+
+// Dequeue functions
+PCB* dequeue_head() {
     // queue is empty --> error
     if (ready_queue.head == NULL) return NULL;
     
