@@ -477,6 +477,7 @@ int exec(char *args[], int args_size){
     PCB* (*dequeue_func)();
     dequeue_func = dequeue_head;  // always dequeue from head, keep queues sorted based on policy when enqueuing
     int preemptive;
+    int preemptive_switch = 0; //preemtive_switch will denote 1 for RR and 2 for Aging
 
     if (strcmp(policy, "FCFS") == 0){
         enqueue_func = enqueue_tail;
@@ -487,9 +488,11 @@ int exec(char *args[], int args_size){
 	} else if (strcmp(policy, "RR") == 0){
 		enqueue_func = enqueue_tail;
         preemptive = 1;
+	preemptive_switch = 1;
 	} else if (strcmp(policy, "AGING") == 0) {
-        // enqueue_func = enqueue_aging;  IMPLEMENT IN READY_QUEUE.C
+        enqueue_func = enqueue_aging;  //we will use the same enqueue as SJF just with additional aging...
         preemptive = 1;
+	preemptive_switch = 2;
 	} else {
  		fprintf(stderr, "Invalid Policy: %s, \n", policy);
         return 1; 		
@@ -525,6 +528,7 @@ int exec(char *args[], int args_size){
 
     // Preemptive policies (RR and AGING)  ** ONLY RR IMPLEMENTED **
     else if (preemptive == 1) {
+	if (preemptive_switch = 1){
         while (ready_queue.head != NULL) {
             PCB *current_pcb = dequeue_func(); 
             int end_of_program = current_pcb->start + current_pcb->program_length;
@@ -545,6 +549,35 @@ int exec(char *args[], int args_size){
                 pcb_cleanup(current_pcb);
             }
         }
+	} else{
+	//Aging:
+	while (ready_queue.head != NULL) {
+		PCB *current_pcb = dequeue_func();
+		int lines_run = 0 ; //time quantum 1
+		int end_of_program = current_pcb ->start + current_pcb->program_length;
+		
+		while (lines_run < 1 && current_pcb->program_counter < end_of_program){
+			char *line = get_line(current_pcb->program_counter);
+			parseInput(line);
+			current_pcb->program_counter++;
+			lines_run++;
+			
+			//Update all job queues left in list
+			PCB* queued_pcb = current_pcb->next;
+			while (queued_pcb != NULL){
+				update_job_score(queued_pcb);
+				queued_pcb = queued_pcb->next;	}
+		}
+
+		//Decide wether to swap out or not:
+		if (current_pcb->program_counter < end_of_program){
+			enqueue_func(current_pcb);
+		} else{
+			pcb_cleanup(current_pcb);
+		}
+	}
+	}
+
     }
 
 	return 0;
