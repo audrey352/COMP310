@@ -1,19 +1,23 @@
 DUE February 27th
+
 Completed:
-Code Loading
-PCB
-Ready Queue
-Scheduler Logic
-Cleanup
-Exec Command
-Single Process
-Multiprocess
-Adding Scheduling Policies
-SJF with job aging
+1.2.1. Scheduling Infrastructure
+	Code Loading
+	PCB
+	Ready Queue
+	Scheduler Logic
+	Cleanup
+1.2.2. Exec Command
+	Single Process
+	Multiprocess
+1.2.3. Adding Scheduling Policies
+	SJF
+	RR
+1.2.4. SJF with job aging
+1.2.5 Background Mode 
+	RR30 Policy
 
 Tasks:
-1.2.5 Background Mode 
-	RR Policy
 	Execution in the background
 1.2.6 Multithreaded Scehduler
 Testcases

@@ -491,6 +491,10 @@ int exec(char *args[], int args_size){
 		enqueue_func = enqueue_tail;
         preemptive = 1;
         time_slice = 2;
+    } else if (strcmp(policy, "RR30") == 0){
+        enqueue_func = enqueue_tail;
+        preemptive = 1;
+        time_slice = 30;
 	} else if (strcmp(policy, "AGING") == 0) {
         enqueue_func = enqueue_aging;  //we will use the same enqueue as SJF just with additional aging...
         preemptive = 1;
@@ -529,7 +533,7 @@ int exec(char *args[], int args_size){
         }
     }
 
-    // Preemptive policies (RR and AGING)
+    // Preemptive policies (RR, RR30, & AGING)
     else if (preemptive == 1) {
         while (ready_queue.head != NULL) {
             PCB *current_pcb = dequeue_func(); 
@@ -543,7 +547,7 @@ int exec(char *args[], int args_size){
                 lines_run++;
             }
 
-            // Update jobs left in queue for aging policy
+            // AGING policy: Update scores of jobs left in queue
             // all decreasing by 1 so order shouldn't change, enqueue will add back the job that ran in the correct spot
             if (aging_policy) {
                 PCB* queued_pcb = ready_queue.head;
