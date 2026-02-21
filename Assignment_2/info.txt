@@ -61,5 +61,3 @@ Other new changes:
 aging: instructions are kind of confusing, I think an intuitive way to think abt how the queue is updated is 
 "initially order your queue in increasing score order, then run + keep head at the front as long as its score is lower or equal to the score
 of the next pcb in the queue. When score of next pcb becomes lower, move head to tail of queue"
-
-NEED TO: re-download test case folder since they said it had issues
