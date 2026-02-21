@@ -56,7 +56,7 @@ void mem_set_value(char *var_in, char *value_in) {
     return;
 }
 
-//get value based on input key
+// Get value based on input key
 char *mem_get_value(char *var_in) {
     int i;
 
@@ -68,7 +68,7 @@ char *mem_get_value(char *var_in) {
     return NULL;
 }
 
-//Initialize a big array to store all programs
+// Initialize a big array to store all programs
 char *program_storage[MAX_STORAGE_LINES];
 int program_index = 0;  // tracks where the next empty line is in program storage
 int next_pid = 1;  // global counter for assigning unique PIDs
@@ -85,12 +85,12 @@ int add_line(char *line) {
 }
 
 
-//get line simply returns the next line in the array
+// Get line simply returns the next line in the array
 char* get_line(int index){
 	return program_storage[index];
 }
 
-// load program line by line into memory. 
+// Load program line by line into memory. 
 // Returns 0 on success, and 1 if the file doesn't exist or the program is too long to fit in memory. 
 int load_program(char *script, int* length_out, int* start_out) {
     // Open file & make sure it exists

@@ -472,13 +472,15 @@ int exec(char *args[], int args_size){
         return 1;
     }
 
-    // Check that policy is valid & set enqueue function
+    // Set up for different scheduling policies
     void (*enqueue_func)(PCB *);
     PCB* (*dequeue_func)();
     dequeue_func = dequeue_head;  // always dequeue from head, keep queues sorted based on policy when enqueuing
-    int preemptive;
-    int preemptive_switch = 0; //preemtive_switch will denote 1 for RR and 2 for Aging
+    int preemptive;  // 0 for preemptive, 1 for non-preemptive
+    bool aging_policy = false;
+    int time_slice;  // number of lines to run before switching to next program (only used for preemptive policies)
 
+    // Check that policy is valid & set functions/variables
     if (strcmp(policy, "FCFS") == 0){
         enqueue_func = enqueue_tail;
         preemptive = 0;
@@ -488,11 +490,12 @@ int exec(char *args[], int args_size){
 	} else if (strcmp(policy, "RR") == 0){
 		enqueue_func = enqueue_tail;
         preemptive = 1;
-	preemptive_switch = 1;
+        time_slice = 2;
 	} else if (strcmp(policy, "AGING") == 0) {
         enqueue_func = enqueue_aging;  //we will use the same enqueue as SJF just with additional aging...
         preemptive = 1;
-	preemptive_switch = 2;
+        time_slice = 1;
+        aging_policy = true;
 	} else {
  		fprintf(stderr, "Invalid Policy: %s, \n", policy);
         return 1; 		
@@ -526,68 +529,38 @@ int exec(char *args[], int args_size){
         }
     }
 
-    // Preemptive policies (RR and AGING)  ** ONLY RR IMPLEMENTED **
+    // Preemptive policies (RR and AGING)
     else if (preemptive == 1) {
-	if (preemptive_switch == 1){
         while (ready_queue.head != NULL) {
             PCB *current_pcb = dequeue_func(); 
             int end_of_program = current_pcb->start + current_pcb->program_length;
-            
-            // RR: run 2 lines of the program
-            int lines_run = 0;
-            while (lines_run < 2 && current_pcb->program_counter < end_of_program) {
+            int lines_run = 0;  // track how many lines have been executed
+
+            while (lines_run < time_slice && current_pcb->program_counter < end_of_program) {
                 char *line = get_line(current_pcb->program_counter);
                 parseInput(line);  // execute instruction
                 current_pcb->program_counter++;  // go to next instruction
                 lines_run++;
             }
 
-            // Add to end of queue if not finished, otherwise clean up PCB and program storage
+            // Update jobs left in queue for aging policy
+            // all decreasing by 1 so order shouldn't change, enqueue will add back the job that ran in the correct spot
+            if (aging_policy) {
+                PCB* queued_pcb = ready_queue.head;
+                while (queued_pcb != NULL){
+                    update_job_score(queued_pcb);
+                    queued_pcb = queued_pcb->next;	
+                }
+            }
+
+            // Add to queue if program not finished, otherwise clean up PCB and program storage
             if (current_pcb->program_counter < end_of_program) {
                 enqueue_func(current_pcb);
             } else {
                 pcb_cleanup(current_pcb);
             }
         }
-	} else{
-	//Aging:
-	//printf("Running Aging Policy");
-	while (ready_queue.head != NULL) {
-		PCB *current_pcb = dequeue_func();
-		int lines_run = 0 ; //time quantum 1
-		int end_of_program = current_pcb->start + current_pcb->program_length;
-	 	
-			
-		while (lines_run < 1 && current_pcb->program_counter < end_of_program){
-			char *line = get_line(current_pcb->program_counter);
-			printf("Ran line: ");
-			parseInput(line);
-			printf("from program: %d, with job scored: %d\n", current_pcb->PID, current_pcb->job_score);
-			current_pcb->program_counter++;
-			lines_run++;
-			
-			//Update all job queues left in list
-			PCB* queued_pcb = ready_queue.head;
-			while (queued_pcb != NULL){
-				int queued_pid = queued_pcb->PID;
-				update_job_score(queued_pcb);
-				queued_pcb = queued_pcb->next;	}
-		}
-
-		//Decide wether to swap out or not:
-		if (current_pcb->program_counter < end_of_program){
-			enqueue_func(current_pcb);
-			printf("First item in queue is: %d \n", ready_queue.head->PID);
-		} else{
-			pcb_cleanup(current_pcb);
-		}
-	}
-	}
-
     }
 
 	return 0;
 }
-
-
-

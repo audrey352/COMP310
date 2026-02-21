@@ -28,10 +28,23 @@ int pcb_cleanup(PCB *pcb) {
     return 0;
 }
 
+// Function for updating the job score
+int update_job_score(PCB *pcb){
+	int prev_job_score = pcb->job_score;
+	
+    if (prev_job_score < 0){
+	       return -1; // It should never be less than 0 so return an error code if so
+	} else if (prev_job_score > 0){
+		pcb->job_score = prev_job_score - 1; // If it's greater than 0, subtract 1.
+	}
+	// Otherwise do nothing (keep at 0).
+
+	return 0;
+}
+
 
 // Initializing global ready queue 
 ReadyQueue ready_queue = {NULL, NULL};
-
 
 // Enqueue functions
 void enqueue_tail(PCB *pcb) {
@@ -44,6 +57,20 @@ void enqueue_tail(PCB *pcb) {
     else {
         ready_queue.tail->next = pcb;
         ready_queue.tail = pcb;
+    }
+    return;
+}
+
+void enqueue_head(PCB *pcb) {
+    // if queue empty, head and tail both point to the new PCB
+    if (ready_queue.head == NULL && ready_queue.tail == NULL) {
+        ready_queue.head = pcb;
+        ready_queue.tail = pcb;
+    } 
+    // otherwise, add to head of queue and update head
+    else {
+        pcb->next = ready_queue.head;
+        ready_queue.head = pcb;
     }
     return;
 }
@@ -74,33 +101,21 @@ void enqueue_sjf(PCB *pcb) {
 }
 
 void enqueue_aging(PCB *pcb){
-	 int pcb_job_score = pcb->job_score;
-   	 PCB *current = ready_queue.head;
-         PCB *previous = NULL;
+	int current_job_score = pcb->job_score;
+   	PCB *next = ready_queue.head;
 
-    	// find the first PCB in the queue with a larger job score
-    	// if equal length, insert after
-    	while (current != NULL && current->job_score < pcb_job_score) {
-        	previous = current;
-        	current = current->next;
-    	}
-
-    	// Insert new PCB between previous and current
-	pcb->next = current;
-    	if (previous == NULL) {
-        	ready_queue.head = pcb;  // inserting at head
-    	}
-    	else {
-        	previous->next = pcb;  // link previous to new PCB
-    	}
-
-    	if (current == NULL) ready_queue.tail = pcb;  // inserting at tail
-
-    	return;
+    // if next in queue has equal or higher score (or queue empty), keep current job at head of queue
+    if (next == NULL || next->job_score >= current_job_score){
+        enqueue_head(pcb);
+    }
+    // if next score is lower, move pcb to tail of queue
+    else if (next->job_score < current_job_score) {
+        enqueue_tail(pcb);
+    }
+    return;
 }
 
-
-// Dequeue functions
+// Dequeue function
 PCB* dequeue_head() {
     // queue is empty --> error
     if (ready_queue.head == NULL) return NULL;
@@ -114,19 +129,6 @@ PCB* dequeue_head() {
     if (ready_queue.head == NULL) ready_queue.tail = NULL;
 
     return pcb;  // return dequeued PCB
-}
-
-//Helper function for updating the job score
-int update_job_score(PCB *pcb){
-	int err_code = 0;
-	int prev_job_score = pcb->job_score;
-	if (prev_job_score < 0){
-	       err_code = -1; //It should never be less than 0 so return an error code if so
-	} else if (prev_job_score > 0){
-		pcb->job_score = prev_job_score - 1; //If it's greater than 0, subtract 1.
-	}
-	//Otherwise do nothing (keep at 0).
-	return err_code;
 }
 
 		

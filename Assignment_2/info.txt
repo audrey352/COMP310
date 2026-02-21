@@ -9,9 +9,9 @@ Exec Command
 Single Process
 Multiprocess
 Adding Scheduling Policies
+SJF with job aging
 
 Tasks:
-1.2.4 AJF with job aging
 1.2.5 Background Mode 
 	RR Policy
 	Execution in the background
@@ -58,15 +58,8 @@ Other new changes:
 - created a pcb cleanup function to remove the program from storage  **dequeue is what disconnects pcb from ready queue
 - added the prog1-2-3 files they give as examples in the src folder to test the policies easily
 
-QUESTION: im confused if SJF is pre emptive or not?? I think i implemented the non pre empted version since the programs dont get 
-		 switched out when new ones join the queue (ie if it starts running it fully runs), which is differnt from the example she had done in class (jan 13)
-
-Not fully sure I'm interpreting this correctly: "You will have the easiest time if you structure your code 
-around  these  two  differences.  Have  only  one  (a  bit  tricky)  or  two  (we  found  this  easier)  loops 
-executing program code. If using two loops, one is for policies that are non-preemptive, and the 
-other is for preemptive policies. Use configurable variables to decide when to preempt processes, 
-and to decide which policy’s enqueue/dequeue functions should be used. (The reference solution 
-sets the enqueue/dequeue functions using variables with function pointers. However, that is not 
-required, and there are plenty of other reasonable ways to do this.)"
+aging: instructions are kind of confusing, I think an intuitive way to think abt how the queue is updated is 
+"initially order your queue in increasing score order, then run + keep head at the front as long as its score is lower or equal to the score
+of the next pcb in the queue. When score of next pcb becomes lower, move head to tail of queue"
 
 NEED TO: re-download test case folder since they said it had issues
