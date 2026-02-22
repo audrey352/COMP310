@@ -142,48 +142,67 @@ int interpreter(char *command_args[], int args_size) {
             return badcommand();
         return run(&command_args[1], args_size - 1);
     } else if (strcmp(command_args[0], "exec") == 0){
-	    
-	if (args_size < 3 || args_size > 6){
-		return badcommand();
-	}
+        // Check arguments
+        if (args_size < 3 || args_size > 7){
+            return badcommand();
+	    }
+        if (command_args == NULL){
+            printf("Command_args is null\n");
+            return 1;
+        }
 
-	if (command_args == NULL){
-		printf("Command_args is null\n");
-		return 1;
-	}
+        // Set up flags to check for optional arguments
+        int batch_flag = 0;
+        int mt_flag = 0;
+        int last = args_size - 1;  // index of last argument
 
-	int batch_flag = 0;
+        // Check last argument for MT (multi-threading mode)
+        if (strcmp(command_args[last], "MT") == 0) {
+            mt_flag = 1;
+            last--;  // adjust to then check for batch mode
+        }
 
-	PCB* batch_pcb;
-//If the # option is enabled we need to load rest of script into program, then create a pcb
-	if (strcmp(command_args[args_size-1], "#") == 0){
-		batch_flag = 1;
-		int start;
-		int length;
-		int code = load_program_file(stdin, &length, &start);
-		batch_pcb = create_pcb(start, length);
-		if (batch_pcb == NULL ){
-			printf("Wasn't able to process rest of script. Running exec normally.\n");
-			
-		}
-		//printf("batch_pcb PID is: %d.\n", batch_pcb->PID);
-		//Checking PCB contents:
-		else{
-		enqueue_tail(batch_pcb);
-		}
-	}
+        // Check last (or second to last) argument for # (batch mode)
+        if (strcmp(command_args[last], "#") == 0) {
+            batch_flag = 1;
+            last--;  // adjust to get index of policy
+        }
 
-	char *args[10];
-	//printf("Created array\n");
+        // If MT is enabled, create worker threads
+        if (mt_flag) {
 
-	for (int i = 0 ; i < (args_size - 1-batch_flag) ; i++){
-	//	printf("Looping: %d\n", i);
-		args[i] = command_args[i+1];
-	}
-	//printf("done looping \n");	
-	args[(args_size - 1-batch_flag)] = NULL;
+        }
 
-	return exec(args, args_size-1-batch_flag);
+        // If the # option is enabled we need to load rest of script into program, then create a pcb
+        if (batch_flag) {
+            batch_flag = 1;
+            PCB* batch_pcb;
+            int start;
+            int length;
+            int code = load_program_file(stdin, &length, &start);  // prog0 = the rest of the script after the exec line
+            batch_pcb = create_pcb(start, length);
+
+            if (batch_pcb == NULL){
+                printf("Wasn't able to process rest of script. Running exec normally.\n");	
+            }
+            // Add prog0 pcb to ready queue (will be the first program in queue)
+            else{
+                enqueue_tail(batch_pcb);
+            }
+        }
+
+        // Set up and run the exec command
+        // number of arguments to pass to exec: programs + policy
+        int exec_argc = last;  // skips # and/or MT if present
+
+        // copy program args + policy
+        char *args[10];
+        for (int i = 0; i < exec_argc; i++) {
+            args[i] = command_args[i + 1];  // skip "exec"
+        }	
+        args[exec_argc] = NULL;  // NULL-terminate the args for exec
+
+        return exec(args, exec_argc);  // run exec
     }
     else {
 	    return badcommand();
