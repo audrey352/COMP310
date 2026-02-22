@@ -58,6 +58,7 @@ int cd(char *path);
 int source(char *script);
 int run(char *args[], int args_size);
 int exec(char* args[], int args_size);
+int exec_bg(char* args[], int args_size);
 int badcommandFileDoesNotExist();
 
 // Interpret commands and their arguments
@@ -141,7 +142,8 @@ int interpreter(char *command_args[], int args_size) {
             return badcommand();
         return run(&command_args[1], args_size - 1);
     } else if (strcmp(command_args[0], "exec") == 0){
-	if (args_size < 3 || args_size > 5){
+	    
+	if (args_size < 3 || args_size > 6){
 		return badcommand();
 	}
 
@@ -150,19 +152,42 @@ int interpreter(char *command_args[], int args_size) {
 		return 1;
 	}
 
+	int batch_flag = 0;
+
+	PCB* batch_pcb;
+//If the # option is enabled we need to load rest of script into program, then create a pcb
+	if (strcmp(command_args[args_size-1], "#") == 0){
+		batch_flag = 1;
+		int start;
+		int length;
+		int code = load_program_file(stdin, &length, &start);
+		batch_pcb = create_pcb(start, length);
+		if (batch_pcb == NULL ){
+			printf("Wasn't able to process rest of script. Running exec normally.\n");
+			
+		}
+		//printf("batch_pcb PID is: %d.\n", batch_pcb->PID);
+		//Checking PCB contents:
+		else{
+		enqueue_tail(batch_pcb);
+		}
+	}
+
 	char *args[10];
 	//printf("Created array\n");
 
-	for (int i = 0 ; i < (args_size - 1) ; i++){
+	for (int i = 0 ; i < (args_size - 1-batch_flag) ; i++){
 	//	printf("Looping: %d\n", i);
 		args[i] = command_args[i+1];
 	}
 	//printf("done looping \n");	
-	args[(args_size - 1)] = NULL;
-	return exec(args, args_size-1);
-    
-    } else
-        return badcommand();
+	args[(args_size - 1-batch_flag)] = NULL;
+
+	return exec(args, args_size-1-batch_flag);
+    }
+    else {
+	    return badcommand();
+    }
 }
 
 int help() {
@@ -458,6 +483,8 @@ bool has_duplicate_files(char *files[], int num_files) {
 
 
 int exec(char *args[], int args_size){
+	//printf("Running exec \n");
+
 	char* policy;
     int num_programs = args_size - 1;
 	policy = args[num_programs];
@@ -470,7 +497,7 @@ int exec(char *args[], int args_size){
     if (args_size > 2 && has_duplicate_files(args, num_programs)) {
         fprintf(stderr, "Error: Duplicate program files provided to exec.\n");
         return 1;
-    }
+   }
 
     // Set up for different scheduling policies
     void (*enqueue_func)(PCB *);
@@ -522,7 +549,6 @@ int exec(char *args[], int args_size){
     if (preemptive == 0) {
         while (ready_queue.head != NULL) {
             PCB *current_pcb = dequeue_func(); 
-            
             // Run full program without preemption
             while (current_pcb->program_counter < current_pcb->start + current_pcb->program_length) {
                 char *line = get_line(current_pcb->program_counter);
@@ -568,3 +594,6 @@ int exec(char *args[], int args_size){
 
 	return 0;
 }
+
+
+

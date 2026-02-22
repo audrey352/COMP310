@@ -16,5 +16,5 @@ void mem_set_value(char *var, char *value);
 int add_line(char *line);
 char* get_line(int index);
 int load_program(char *script, int* length_out, int* start_out);
-
+int load_program_file(FILE *fp, int* length_out, int* start_out);
 #endif

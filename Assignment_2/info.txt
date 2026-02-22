@@ -65,3 +65,16 @@ Other new changes:
 aging: instructions are kind of confusing, I think an intuitive way to think abt how the queue is updated is 
 "initially order your queue in increasing score order, then run + keep head at the front as long as its score is lower or equal to the score
 of the next pcb in the queue. When score of next pcb becomes lower, move head to tail of queue"
+
+
+Implementing "#" in exec:
+- updated load_program to have a wrapper function that takes the name of a script and added a function: load_program_file that lets you
+create programs from any stream.
+- added conditions for checking # in interpreter. 
+- the interpreter will check for #. If it finds it, it will create a PCB with the rest of whatever is in the stream (file or input (use ctrl d to insert EOF if you want ot type from the command line)). Then it will add this PCB to the queue so that it is always first to run and then it will
+call exec as normal. There's also a "batch_flag" which gets set to 1 so that when we copy the command arguments we ignore # if it's present. 
+
+I did my own testing with just what I thought of. I was a bit confused by the priority idea but I think it should work?
+It has the same behavior as the example execution. 
+
+

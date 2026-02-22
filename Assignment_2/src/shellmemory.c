@@ -77,6 +77,8 @@ int next_pid = 1;  // global counter for assigning unique PIDs
 //Before adding the line, it ensures that the index does not exceed max 
 //number of lines allowed (returns -1 for error if that is the case)
 int add_line(char *line) {
+	//printf("Adding: %s at line: %d. \n", line, program_index);
+	
 	if (program_index ==  MAX_STORAGE_LINES){
 		return -1;
 	}
@@ -90,12 +92,25 @@ char* get_line(int index){
 	return program_storage[index];
 }
 
+
+//wrapper function that can load from stream (implemented for batch mode)
+int load_program(char* filename, int* length_out, int* start_out){
+	FILE* fp = fopen(filename, "r");
+	if (fp == NULL) return 1;
+	int result = load_program_file(fp, length_out, start_out);
+	if (result == 1){
+		fprintf(stderr, "Program too long to fit in memory: %s\n", filename);
+	}
+	fclose(fp);
+	return result;
+}
+//og function that was renamed to take input from stream
 // Load program line by line into memory. 
 // Returns 0 on success, and 1 if the file doesn't exist or the program is too long to fit in memory. 
-int load_program(char *script, int* length_out, int* start_out) {
-    // Open file & make sure it exists
-    FILE *f = fopen(script, "rt");
-    if (f == NULL) {;
+int load_program_file(FILE* f, int* length_out, int* start_out) {
+    // Open file & make sure it exists -> make sure file exists
+    //FILE *f = fopen(script, "rt");
+    if (f == NULL) {
         return 1;
     }
 
@@ -107,14 +122,14 @@ int load_program(char *script, int* length_out, int* start_out) {
     // read lines until end of file
 	while (fgets(buffer, MAX_LINE_LENGTH, f)){
         if (add_line(buffer) < 0) {  // stop if memory full
-            fprintf(stderr, "Program too long to fit in memory: %s\n", script);
+            //fprintf(stderr, "Program too long to fit in memory: %s\n", script);
             fclose(f);
             return 1;
         }
         count++;
     }
 
-    fclose(f);
+    //fclose(f);
     *length_out = count;
 	return 0;
 }
