@@ -71,10 +71,23 @@ Implementing "#" in exec:
 - updated load_program to have a wrapper function that takes the name of a script and added a function: load_program_file that lets you
 create programs from any stream.
 - added conditions for checking # in interpreter. 
-- the interpreter will check for #. If it finds it, it will create a PCB with the rest of whatever is in the stream (file or input (use ctrl d to insert EOF if you want ot type from the command line)). Then it will add this PCB to the queue so that it is always first to run and then it will
-call exec as normal. There's also a "batch_flag" which gets set to 1 so that when we copy the command arguments we ignore # if it's present. 
+- the interpreter will check for #. If it finds it, it will create a PCB with the rest of whatever is in the stream (file or input (use ctrl d 
+	to insert EOF if you want ot type from the command line)). Then it will add this PCB to the queue so that it is always first to run and then it will
+	call exec as normal. There's also a "batch_flag" which gets set to 1 so that when we copy the command arguments we ignore # if it's present. 
 
 I did my own testing with just what I thought of. I was a bit confused by the priority idea but I think it should work?
 It has the same behavior as the example execution. 
 
-
+Multithreaded: 
+- when we parse for exec command we check if MT and/or # are present and then set some flags + pass them to the exec command
+- exec now deals with setting up stuff for the MT and # options (I moved the # batch pcb stuff to exec)
+- exec: first load and enqueue all input programs, then if # enabled we create and enqueue the pcb at the head (so always the first to run), 
+	once the ready queue is built, we pick a scheduler based on MT flag and send it all of the info for how to run
+- New file: scheduler.c. This had the single threaded and multi threaded options for the scheduler. 
+	-- Single threaded hasn't changed. It's the different loops we had in exec before (for the different policies)
+	-- Multi creates 2 worker threads which both dequeue from the ready queue simultaneaously. The worker function basically has the RR version 
+		of the exec loop, but lock the ready queue when dequeuing/enquing pcbs so that the 2 workers don't mess up the queue
+	-- has global mt_flag, quit_requested, and worker_threads so that interpreter.c can access/modify them based on the inputs received
+- we also assume that once exec is called with a policy then all the next calls to exec will be with the same policy so don't need to worry 
+abt having diff policies at the same time
+- modified quit() to join the worker threads, then actually exits when ready queue is empty

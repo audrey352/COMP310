@@ -22,6 +22,7 @@ int pcb_cleanup(PCB *pcb);
 int update_job_score(PCB* pcb);
 
 void enqueue_tail(PCB *pcb); 
+void enqueue_head(PCB *pcb); 
 void enqueue_sjf(PCB *pcb);
 void enqueue_aging(PCB *pcb);
 PCB* dequeue_head();

@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include <ctype.h>              // tolower, isdigit
 #include <dirent.h>             // scandir
 #include <unistd.h>             // chdir
@@ -24,6 +25,7 @@
 #include "shellmemory.h"
 #include "shell.h"
 #include "readyqueue.h"
+#include "scheduler.h"
 
 int badcommand() {
     printf("Unknown Command\n");
@@ -57,8 +59,8 @@ int touch(char *path);
 int cd(char *path);
 int source(char *script);
 int run(char *args[], int args_size);
-int exec(char* args[], int args_size);
-int exec_bg(char* args[], int args_size);
+int exec(char* args[], int args_size, int mt_flag, int batch_flag);
+// int exec_bg(char* args[], int args_size);
 int badcommandFileDoesNotExist();
 
 // Interpret commands and their arguments
@@ -153,12 +155,11 @@ int interpreter(char *command_args[], int args_size) {
 
         // Set up flags to check for optional arguments
         int batch_flag = 0;
-        int mt_flag = 0;
         int last = args_size - 1;  // index of last argument
 
         // Check last argument for MT (multi-threading mode)
         if (strcmp(command_args[last], "MT") == 0) {
-            mt_flag = 1;
+            mt_flag = 1;  // set global flag (see scheduler.c)
             last--;  // adjust to then check for batch mode
         }
 
@@ -166,29 +167,6 @@ int interpreter(char *command_args[], int args_size) {
         if (strcmp(command_args[last], "#") == 0) {
             batch_flag = 1;
             last--;  // adjust to get index of policy
-        }
-
-        // If MT is enabled, create worker threads
-        if (mt_flag) {
-
-        }
-
-        // If the # option is enabled we need to load rest of script into program, then create a pcb
-        if (batch_flag) {
-            batch_flag = 1;
-            PCB* batch_pcb;
-            int start;
-            int length;
-            int code = load_program_file(stdin, &length, &start);  // prog0 = the rest of the script after the exec line
-            batch_pcb = create_pcb(start, length);
-
-            if (batch_pcb == NULL){
-                printf("Wasn't able to process rest of script. Running exec normally.\n");	
-            }
-            // Add prog0 pcb to ready queue (will be the first program in queue)
-            else{
-                enqueue_tail(batch_pcb);
-            }
         }
 
         // Set up and run the exec command
@@ -202,7 +180,7 @@ int interpreter(char *command_args[], int args_size) {
         }	
         args[exec_argc] = NULL;  // NULL-terminate the args for exec
 
-        return exec(args, exec_argc);  // run exec
+        return exec(args, exec_argc, mt_flag, batch_flag);  // run exec
     }
     else {
 	    return badcommand();
@@ -223,7 +201,15 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
+    quit_requested = true;
     printf("Bye!\n");
+
+    // join all worker threads so they finish their jobs
+    if (mt_flag) {
+        for (int i = 0; i < 2; i++)
+            pthread_join(worker_threads[i], NULL);
+    }
+
     exit(0);
 }
 
@@ -501,9 +487,7 @@ bool has_duplicate_files(char *files[], int num_files) {
 }
 
 
-int exec(char *args[], int args_size){
-	//printf("Running exec \n");
-
+int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 	char* policy;
     int num_programs = args_size - 1;
 	policy = args[num_programs];
@@ -551,7 +535,7 @@ int exec(char *args[], int args_size){
         return 1; 		
 	}
 
-    // Load all programs into memory
+    // Load all input programs into memory
     for (int i = 0; i < (num_programs); i++){
         int err_code; 
         if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i])) != 0)
@@ -561,54 +545,49 @@ int exec(char *args[], int args_size){
     // Create & enqueue all PCBs (only if all programs loaded successfully)
     for (int i = 0; i < (num_programs); i++){
         PCB *pcb = create_pcb(prog_starts[i], prog_lengths[i]);
-        enqueue_func(pcb);
-    }
-
-    // Non-preemptive policies (FCFS and SJF)
-    if (preemptive == 0) {
-        while (ready_queue.head != NULL) {
-            PCB *current_pcb = dequeue_func(); 
-            // Run full program without preemption
-            while (current_pcb->program_counter < current_pcb->start + current_pcb->program_length) {
-                char *line = get_line(current_pcb->program_counter);
-                parseInput(line);  // execute instruction
-                current_pcb->program_counter++;  // go to next instruction
-            }
-            pcb_cleanup(current_pcb);  // remove program from storage and free PCB
+        if (mt_flag) {
+            pthread_mutex_lock(&ready_queue_lock);
+            enqueue_func(pcb);
+            pthread_mutex_unlock(&ready_queue_lock);
+        } else {
+            enqueue_func(pcb);
         }
     }
 
-    // Preemptive policies (RR, RR30, & AGING)
-    else if (preemptive == 1) {
-        while (ready_queue.head != NULL) {
-            PCB *current_pcb = dequeue_func(); 
-            int end_of_program = current_pcb->start + current_pcb->program_length;
-            int lines_run = 0;  // track how many lines have been executed
+    // If # option is enabled, load rest of main program as a new PCB and enqueue at head
+    if (batch_flag) {
+        int start;
+        int length;
 
-            while (lines_run < time_slice && current_pcb->program_counter < end_of_program) {
-                char *line = get_line(current_pcb->program_counter);
-                parseInput(line);  // execute instruction
-                current_pcb->program_counter++;  // go to next instruction
-                lines_run++;
-            }
-
-            // AGING policy: Update scores of jobs left in queue
-            // all decreasing by 1 so order shouldn't change, enqueue will add back the job that ran in the correct spot
-            if (aging_policy) {
-                PCB* queued_pcb = ready_queue.head;
-                while (queued_pcb != NULL){
-                    update_job_score(queued_pcb);
-                    queued_pcb = queued_pcb->next;	
+        int code = load_program_file(stdin, &length, &start);  // prog0 = the rest of the script after the exec line
+        if (code == 0){
+            PCB* batch_pcb = create_pcb(start, length);
+            if (batch_pcb != NULL){  // put batch program at front of queue
+                if (mt_flag) {
+                    pthread_mutex_lock(&ready_queue_lock);
+                    enqueue_func(batch_pcb);
+                    pthread_mutex_unlock(&ready_queue_lock);
+                } else {
+                    enqueue_func(batch_pcb);
                 }
             }
-
-            // Add to queue if program not finished, otherwise clean up PCB and program storage
-            if (current_pcb->program_counter < end_of_program) {
-                enqueue_func(current_pcb);
-            } else {
-                pcb_cleanup(current_pcb);
-            }
         }
+    }
+
+    // Create context for scheduler (policy, enqueue/dequeue fcts, etc)
+    SchedulerContext ctx = {
+        .enqueue_func = enqueue_func,
+        .dequeue_func = dequeue_func,
+        .preemptive = preemptive,
+        .aging_policy = aging_policy,
+        .time_slice = time_slice
+    };
+
+    // Run the correct scheduler with appropriate context
+    if (mt_flag) {
+        return scheduler_multi(&ctx);  // creates 2 worker threads
+    } else {
+        return scheduler_single(&ctx);
     }
 
 	return 0;
