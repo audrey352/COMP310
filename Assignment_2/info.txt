@@ -91,3 +91,32 @@ Multithreaded:
 - we also assume that once exec is called with a policy then all the next calls to exec will be with the same policy so don't need to worry 
 abt having diff policies at the same time
 - modified quit() to join the worker threads, then actually exits when ready queue is empty
+
+
+Questions:
+- making worker function be the one joining the worker threads? was getting a seg fault when its done in quit()?
+	but instructions say "If quit is called and the ready queue is not empty, the quit implementation needs to join with the 
+	scheduler threads"... is it okay to make quit set a flag and then make the scheduler/worker functions join when the flag is set?
+- make sure our understanding/implementation of MT with quit is correct (batch pcb runs first, what if first instruction is quit, etc)
+- order of printing bye! when # vs not (eg. should be first when doing exec # then quit immediately, so quit should run first?)
+- update: now quit just returns if mt_flag, and exit(0) is done in worker thread after all threads have been joined
+			if not using mt flag then just exit(0) so that single threaded scripts work normally
+- still getting seg fault when calling quit in the shell diretly?
+	Shell version 1.5 created Dec 2025
+	$ exec pA.txt pB.txt pC.txt RR MT
+	A
+	A
+	C
+	C
+	A
+	A
+	C
+	C
+	B
+	B
+	B
+	B
+	$ quit
+	Bye!
+	$ Segmentation fault (core dumped)
+- confused where to join threads + exit

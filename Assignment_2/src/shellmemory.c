@@ -113,8 +113,6 @@ int load_program_file(FILE* f, int* length_out, int* start_out) {
         }
         count++;
     }
-
-    //fclose(f);
     *length_out = count;
 	return 0;
 }

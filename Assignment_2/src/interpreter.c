@@ -200,16 +200,20 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
-    quit_requested = true;
     printf("Bye!\n");
 
     // join all worker threads so they finish their jobs
     if (mt_flag) {
-        for (int i = 0; i < 2; i++)
-            pthread_join(worker_threads[i], NULL);
+        pthread_mutex_lock(&ready_queue_lock);
+        quit_requested = true;
+        pthread_mutex_unlock(&ready_queue_lock);
+        return 0;
+    //     for (int i = 0; i < 2; i++)
+    //         pthread_join(worker_threads[i], NULL);
     }
-
-    exit(0);
+    else {
+        exit(0);
+    }
 }
 
 int set(char *var, char *value) {
