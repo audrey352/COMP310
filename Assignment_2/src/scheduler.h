@@ -12,6 +12,8 @@ typedef struct SchedulerContext {
     int time_slice;  // only for preemptive
 } SchedulerContext;
 
+extern SchedulerContext* scheduler_ctx;  // global reference to scheduler context for worker threads to access
+
 // Schedulers
 int scheduler_single(SchedulerContext *ctx);  // Single-threaded 
 int scheduler_multi(SchedulerContext *ctx);  // Multi-threaded

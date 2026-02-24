@@ -3,16 +3,22 @@
 #include <ctype.h>              // isspace
 #include <string.h>
 #include <unistd.h>             // isatty
+#include <pthread.h>
+#include <stdbool.h> 
 #include "shell.h"
 #include "interpreter.h"
 #include "shellmemory.h"
+#include "scheduler.h"
 
 int parseInput(char ui[]);
+pthread_t main_thread;  // global variable to track main thread for quit function
 
 // Start of everything
 int main(int argc, char *argv[]) {
+    main_thread = pthread_self();
     setbuf(stdin, NULL);
     printf("Shell version 1.5 created Dec 2025\n");
+    printf("main thread id: %lu\n", main_thread);
 
     char prompt = '$';          // Shell prompt
     char userInput[MAX_USER_INPUT];     // user's input stored here
@@ -39,7 +45,7 @@ int main(int argc, char *argv[]) {
             exit(99);           // ignore all other errors
 
         if (feof(stdin)) {
-            return 0;
+            quit();
         }
 
         memset(userInput, 0, sizeof(userInput));

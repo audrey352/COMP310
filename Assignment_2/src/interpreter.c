@@ -50,6 +50,7 @@ int badcommandCd() {
 
 int help();
 int quit();
+int quit_thread();
 int set(char *var, char *value);
 int print(char *var);
 int echo(char *tok);
@@ -200,20 +201,45 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
-    printf("Bye!\n");
+    printf("calling quit from thread %lu\n", pthread_self());
 
-    // join all worker threads so they finish their jobs
+    // quit for MT
     if (mt_flag) {
-        pthread_mutex_lock(&ready_queue_lock);
-        quit_requested = true;
-        pthread_mutex_unlock(&ready_queue_lock);
-        return 0;
-    //     for (int i = 0; i < 2; i++)
-    //         pthread_join(worker_threads[i], NULL);
+        // if main thread and flag set --> join threads
+        if (pthread_equal(pthread_self(), main_thread) && quit_requested) {
+            // Wait for worker threads to finish and join them
+            for (int i = 0; i < 2; i++) {
+                pthread_join(worker_threads[i], NULL);
+            }
+
+            // free context after threads have finished with it
+            if (scheduler_ctx != NULL) {
+                free(scheduler_ctx);
+                scheduler_ctx = NULL;
+                printf("freed context from thread %lu\n", pthread_self());
+            }
+
+            printf("Bye!\n");
+            exit(0);
+        } 
+        // if thread --> set flag
+        else {
+            return quit_thread();  // set quit flag for worker threads, but don't join them until main thread calls quit
+        }
     }
+    // single-threaded quit
     else {
+        printf("Bye!\n");
         exit(0);
     }
+}
+
+int quit_thread() {
+    pthread_mutex_lock(&ready_queue_lock);
+    printf("Worker thread %lu setting quit flag\n", pthread_self());
+    quit_requested = true;
+    pthread_mutex_unlock(&ready_queue_lock);
+    return 0;
 }
 
 int set(char *var, char *value) {
@@ -544,7 +570,19 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i])) != 0)
             return err_code;  // stop if any program doesn't exist or memory is full
     }
-    
+
+    // Create & enqueue all PCBs (only if all programs loaded successfully)
+    for (int i = 0; i < (num_programs); i++){
+        PCB *pcb = create_pcb(prog_starts[i], prog_lengths[i]);
+        if (mt_flag) {
+            pthread_mutex_lock(&ready_queue_lock);
+            enqueue_func(pcb);
+            pthread_mutex_unlock(&ready_queue_lock);
+        } else {
+            enqueue_func(pcb);
+        }
+    }
+
     //If # is enabled, load PCB to ready queue first. 
     if (batch_flag) {
         int start;
@@ -556,24 +594,12 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
             if (batch_pcb != NULL){  // put batch program at front of queue
                 if (mt_flag) {
                     pthread_mutex_lock(&ready_queue_lock);
-                    enqueue_func(batch_pcb);
+                    enqueue_head(batch_pcb);
                     pthread_mutex_unlock(&ready_queue_lock);
                 } else {
-                    enqueue_func(batch_pcb);
+                    enqueue_head(batch_pcb);
                 }
             }
-        }
-    }
-
-    // Create & enqueue all PCBs (only if all programs loaded successfully)
-    for (int i = 0; i < (num_programs); i++){
-        PCB *pcb = create_pcb(prog_starts[i], prog_lengths[i]);
-        if (mt_flag) {
-            pthread_mutex_lock(&ready_queue_lock);
-            enqueue_func(pcb);
-            pthread_mutex_unlock(&ready_queue_lock);
-        } else {
-            enqueue_func(pcb);
         }
     }
 

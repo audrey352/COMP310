@@ -73,32 +73,20 @@ int scheduler_single(SchedulerContext *ctx) {
 
 // Worker function for multi-threaded scheduler (only used with RR and RR30 policies)
 void* worker_func(void* arg) {
-    // printf("[THREAD %lu] Started\n", pthread_self());
 	SchedulerContext* ctx = (SchedulerContext*) arg;
 
     while (true) {
         // Lock + dequeue head PCB
         pthread_mutex_lock(&ready_queue_lock);
-        // printf("[THREAD %lu] Attempting dequeue\n", pthread_self());
         PCB* pcb = ctx->dequeue_func();
-
-        // printf("[THREAD %lu] Dequeued PCB %p (pc=%d start=%d len=%d)\n",
-        // pthread_self(), pcb,
-        // pcb ? pcb->program_counter : -1,
-        // pcb ? pcb->start : -1,
-        // pcb ? pcb->program_length : -1);
 
         // Check if queue was empty
         if (pcb == NULL) {
             // check if quit was called 
             if (quit_requested) {
-                // unlock and join threads
-                pthread_mutex_unlock(&ready_queue_lock); 
-                for (int i = 0; i < 2 ; i++){
-                    pthread_join(worker_threads[i], NULL);
-                }
-                free(scheduler_ctx);
-                exit(0);  // quit was called, exit shell
+                pthread_mutex_unlock(&ready_queue_lock);
+                printf("Worker thread %lu exiting due to quit request\n", pthread_self());
+                break;  // quit was called, exit thread
             }
             // Otherwise, unlock and wait for queue to be non-empty
             pthread_mutex_unlock(&ready_queue_lock);
@@ -148,6 +136,7 @@ int scheduler_multi(SchedulerContext* ctx) {
     	// Create worker threads that run worker_func
 		for (int i = 0; i < 2; i++){
         	pthread_create(&worker_threads[i], NULL, worker_func, scheduler_ctx);
+            printf("Created worker thread %d with id %lu\n", i, worker_threads[i]);
     	}
 		pool_initialized = true;
 	}
@@ -156,13 +145,14 @@ int scheduler_multi(SchedulerContext* ctx) {
 	while (1) {
 		pthread_mutex_lock(&ready_queue_lock);
 		if (ready_queue.head == NULL){
-			pthread_mutex_unlock(&ready_queue_lock);
-			break;
+            usleep(1000);  // sleep twice to double check
+            if (ready_queue.head == NULL){
+                pthread_mutex_unlock(&ready_queue_lock);
+                break;
+            }
 		}
 		pthread_mutex_unlock(&ready_queue_lock);
 		usleep(1000);
 	}
-	// printf("Queue head: %p \n", ready_queue.head);
- 	
     return 0;
 }

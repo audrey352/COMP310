@@ -101,7 +101,7 @@ Questions:
 - order of printing bye! when # vs not (eg. should be first when doing exec # then quit immediately, so quit should run first?)
 - update: now quit just returns if mt_flag, and exit(0) is done in worker thread after all threads have been joined
 			if not using mt flag then just exit(0) so that single threaded scripts work normally
-- still getting seg fault when calling quit in the shell diretly?
+- still getting seg fault when calling quit in the shell directly after doing exec with MT?
 	Shell version 1.5 created Dec 2025
 	$ exec pA.txt pB.txt pC.txt RR MT
 	A
@@ -120,3 +120,4 @@ Questions:
 	Bye!
 	$ Segmentation fault (core dumped)
 - confused where to join threads + exit
+- problem with # and MT --> MT3 not printing weird stuff half the time??

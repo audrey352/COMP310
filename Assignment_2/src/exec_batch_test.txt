@@ -1,4 +1,6 @@
-exec prog1.txt RR #
+exec prog1 RR # MT
+exec prog2 RR MT
 echo progDONE
 echo progDONE2
 echo progDONE3
+quit
