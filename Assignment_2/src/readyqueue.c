@@ -20,9 +20,9 @@ PCB* create_pcb(int program_start, int program_length) {
 // Function to clean up a PCB and free its resources
 // NOT removing from queue (should be done beforehand)
 int pcb_cleanup(PCB *pcb) {
-    // free the lines of the program from storage
+// free the lines of the program from storage
     for (int i = pcb->start; i < pcb->start + pcb->program_length; i++) {
-        free(program_storage[i]);
+	    free(program_storage[i]);
         program_storage[i] = NULL;
     }
     free(pcb);

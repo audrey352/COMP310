@@ -60,7 +60,6 @@ int cd(char *path);
 int source(char *script);
 int run(char *args[], int args_size);
 int exec(char* args[], int args_size, int mt_flag, int batch_flag);
-// int exec_bg(char* args[], int args_size);
 int badcommandFileDoesNotExist();
 
 // Interpret commands and their arguments
@@ -541,20 +540,8 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i])) != 0)
             return err_code;  // stop if any program doesn't exist or memory is full
     }
-
-    // Create & enqueue all PCBs (only if all programs loaded successfully)
-    for (int i = 0; i < (num_programs); i++){
-        PCB *pcb = create_pcb(prog_starts[i], prog_lengths[i]);
-        if (mt_flag) {
-            pthread_mutex_lock(&ready_queue_lock);
-            enqueue_func(pcb);
-            pthread_mutex_unlock(&ready_queue_lock);
-        } else {
-            enqueue_func(pcb);
-        }
-    }
-
-    // If # option is enabled, load rest of main program as a new PCB and enqueue at head
+    
+    //If # is enabled, load PCB to ready queue first. 
     if (batch_flag) {
         int start;
         int length;
@@ -571,6 +558,18 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
                     enqueue_func(batch_pcb);
                 }
             }
+        }
+    }
+
+    // Create & enqueue all PCBs (only if all programs loaded successfully)
+    for (int i = 0; i < (num_programs); i++){
+        PCB *pcb = create_pcb(prog_starts[i], prog_lengths[i]);
+        if (mt_flag) {
+            pthread_mutex_lock(&ready_queue_lock);
+            enqueue_func(pcb);
+            pthread_mutex_unlock(&ready_queue_lock);
+        } else {
+            enqueue_func(pcb);
         }
     }
 
