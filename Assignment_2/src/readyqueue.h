@@ -8,6 +8,7 @@ typedef struct pcb {
 	int program_length;  // number of lines in the program
     struct pcb* next;  // pointer to the next PCB in the ready queue
 	int job_score;
+	pthread_mutex_t lock;  // lock for the pcb
 } PCB;
 
 typedef struct ready_queue {

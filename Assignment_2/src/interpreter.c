@@ -50,7 +50,6 @@ int badcommandCd() {
 
 int help();
 int quit();
-int quit_thread();
 int set(char *var, char *value);
 int print(char *var);
 int echo(char *tok);
@@ -201,45 +200,17 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
-    // printf("calling quit from thread %lu\n", pthread_self());
+    printf("Bye!\n");  // to signal that quit was called
 
-    // quit for MT
+    // quit for MT -- accessed by the threads!
     if (mt_flag) {
-        // if main thread and flag set --> join threads
-        if (pthread_equal(pthread_self(), main_thread) && quit_requested) {
-            // Wait for worker threads to finish and join them
-            for (int i = 0; i < 2; i++) {
-                pthread_join(worker_threads[i], NULL);
-            }
-
-            // free context after threads have finished with it
-            if (scheduler_ctx != NULL) {
-                free(scheduler_ctx);
-                scheduler_ctx = NULL;
-                // printf("freed context from thread %lu\n", pthread_self());
-            }
-
-            printf("Bye!\n");
-            exit(0);
-        } 
-        // if thread --> set flag
-        else {
-            return quit_thread();  // set quit flag for worker threads, but don't join them until main thread calls quit
-        }
+        quit_requested = true;  // doesn't need lock since we only care abut setting it true
+        return 0;
     }
     // single-threaded quit
     else {
-        printf("Bye!\n");
-        exit(0);
+        exit(0);  // exit directly from here since no threads to worry about
     }
-}
-
-int quit_thread() {
-    pthread_mutex_lock(&ready_queue_lock);
-    // printf("Worker thread %lu setting quit flag\n", pthread_self());
-    quit_requested = true;
-    pthread_mutex_unlock(&ready_queue_lock);
-    return 0;
 }
 
 int set(char *var, char *value) {

@@ -2,21 +2,22 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <unistd.h> 
+#include <stdlib.h>
 
 #include "scheduler.h"
 #include "readyqueue.h"
-#include "shell.h"
-#include "interpreter.h"
 #include "shellmemory.h"
-#include <stdlib.h>
+#include "shell.h"
+
 
 // Initialize mutex and quit_requested variable
+struct SchedulerContext *scheduler_ctx = NULL;
 pthread_mutex_t ready_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_t worker_threads[2];  // global thread handles
 bool quit_requested = false;  // signals worker threads to stop when quit is called
 int mt_flag = 0;
 static bool pool_initialized = false;
-struct SchedulerContext *scheduler_ctx = NULL;
+
 
 // Function to run the single threaded scheduler
 int scheduler_single(SchedulerContext *ctx) {
@@ -97,8 +98,7 @@ void* worker_func(void* arg) {
             // check if quit was called 
             if (quit_requested) {
                 pthread_mutex_unlock(&ready_queue_lock);
-                printf("Worker thread %lu exiting due to quit request\n", pthread_self());
-                break;  // quit was called, exit thread
+                break;  // quit was called, exit thread (go to return NULL below)
             }
             // Otherwise, unlock and wait for queue to be non-empty
             pthread_mutex_unlock(&ready_queue_lock);
@@ -114,8 +114,6 @@ void* worker_func(void* arg) {
 	
         while (lines_run < ctx->time_slice && pcb->program_counter < end_of_program) {
             char* line = get_line(pcb->program_counter);
-            // printf("[THREAD %lu] Running line %d (addr=%p)\n",
-            //     pthread_self(), pcb->program_counter,line);
 	        parseInput(line);
             pcb->program_counter++;
             lines_run++;
@@ -125,46 +123,43 @@ void* worker_func(void* arg) {
         pthread_mutex_lock(&ready_queue_lock);
         if (pcb->program_counter < end_of_program) {
             ctx->enqueue_func(pcb);
-        } else {
-            pcb_cleanup(pcb);  // does cleanup function need a lock?
-        }
+        } 
+        // else {
+            // pcb_cleanup(pcb);
+        // }
         pthread_mutex_unlock(&ready_queue_lock);
     }
-
     return NULL;
 }
 
 // Function to run the multi-threaded scheduler
 int scheduler_multi(SchedulerContext* ctx) {
-	//context will be constant so we want to always keep a global reference 
-	//so stack doesn't get rid of it when we still need it.
-	if (scheduler_ctx == NULL){
-		scheduler_ctx = ctx;
-	}
-	
-	// Check if the threads already exist (ctx is never going to change 
-	// because once exec is called the policy never changes -- so ctx will not either
+	// Check if the threads already exist
 	if (!pool_initialized){
+        // set context only if not already initialized
+        //context will be constant so we want to always keep a global reference 
+	    //so stack doesn't get rid of it when we still need it.
+        scheduler_ctx = ctx;
+
     	// Create worker threads that run worker_func
 		for (int i = 0; i < 2; i++){
         	pthread_create(&worker_threads[i], NULL, worker_func, scheduler_ctx);
-            printf("Created worker thread %d with id %lu\n", i, worker_threads[i]);
     	}
 		pool_initialized = true;
 	}
 
-	// Then block until the threads finish
-	while (1) {
-		pthread_mutex_lock(&ready_queue_lock);
-		if (ready_queue.head == NULL){
-            usleep(1000);  // sleep twice to double check
-            if (ready_queue.head == NULL){
-                pthread_mutex_unlock(&ready_queue_lock);
-                break;
-            }
-		}
-		pthread_mutex_unlock(&ready_queue_lock);
-		usleep(1000);
-	}
+	// Then block until the threads finish  -- DONT NEED? MAIN HANDLES THREAD JOINING
+	// while (1) {
+	// 	pthread_mutex_lock(&ready_queue_lock);
+	// 	if (ready_queue.head == NULL){
+    //         usleep(1000);  // sleep twice to double check
+    //         if (ready_queue.head == NULL){
+    //             pthread_mutex_unlock(&ready_queue_lock);
+    //             break;
+    //         }
+	// 	}
+	// 	pthread_mutex_unlock(&ready_queue_lock);
+	// 	usleep(1000);
+	// }
     return 0;
 }

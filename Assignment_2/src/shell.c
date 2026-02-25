@@ -6,9 +6,9 @@
 #include <pthread.h>
 #include <stdbool.h> 
 #include "shell.h"
-#include "interpreter.h"
 #include "shellmemory.h"
 #include "scheduler.h"
+#include "interpreter.h"
 
 int parseInput(char ui[]);
 pthread_t main_thread;  // global variable to track main thread for quit function
@@ -37,18 +37,34 @@ int main(int argc, char *argv[]) {
         if (!batch_mode) {
             printf("%c ", prompt);
         }
-        // here you should check the unistd library 
-        // so that you can find a way to not display $ in the batch mode
+
         fgets(userInput, MAX_USER_INPUT - 1, stdin);
         errorCode = parseInput(userInput);
         if (errorCode == -1)
-            exit(99);           // ignore all other errors
+            exit(99);  // ignore all other errors
 
         if (feof(stdin)) {
-            quit();
+            if (mt_flag) {
+                break;
+            } else {
+            return 0;
+            }
         }
 
         memset(userInput, 0, sizeof(userInput));
+    }
+
+    // Handle threads if MT
+    if (mt_flag) {
+        // Wait for worker threads to finish and join them
+        for (int i = 0; i < 2; i++) {
+            pthread_join(worker_threads[i], NULL);
+        }
+
+        // free context after threads have finished with it
+        if (scheduler_ctx != NULL) {
+            free(scheduler_ctx);
+        }
     }
 
     return 0;

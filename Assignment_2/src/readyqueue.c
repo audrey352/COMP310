@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include "readyqueue.h"
 #include "shellmemory.h"
@@ -14,6 +15,7 @@ PCB* create_pcb(int program_start, int program_length) {
     pcb->program_length = program_length;
     pcb->next = NULL;
     pcb->job_score = program_length;
+    pthread_mutex_init(&pcb->lock, NULL);
     return pcb;
 }
 
@@ -25,9 +27,11 @@ int pcb_cleanup(PCB *pcb) {
 	    free(program_storage[i]);
         program_storage[i] = NULL;
     }
+
     free(pcb);
     return 0;
 }
+
 
 // Function for updating the job score
 int update_job_score(PCB *pcb){
@@ -150,7 +154,3 @@ PCB* dequeue_head() {
 
     return pcb;  // return dequeued PCB
 }
-
-		
-
-
