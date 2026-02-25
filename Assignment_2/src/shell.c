@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     main_thread = pthread_self();
     setbuf(stdin, NULL);
     printf("Shell version 1.5 created Dec 2025\n");
-    printf("main thread id: %lu\n", main_thread);
+    // printf("main thread id: %lu\n", main_thread);
 
     char prompt = '$';          // Shell prompt
     char userInput[MAX_USER_INPUT];     // user's input stored here

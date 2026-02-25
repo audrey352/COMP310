@@ -37,6 +37,12 @@ int scheduler_single(SchedulerContext *ctx) {
     // Preemptive policies (RR, RR30, & AGING)
     else if (ctx->preemptive == 1) {
         while (ready_queue.head != NULL) {
+            // printf("Jobs in queue: ");
+            // for (PCB* temp = ready_queue.head; temp != NULL; temp = temp->next){
+            //     printf("P%d (%d) ", temp->PID, temp->job_score);
+            // }
+            // printf("\n");
+
             PCB *current_pcb = ctx->dequeue_func(); 
             int end_of_program = current_pcb->start + current_pcb->program_length;
             int lines_run = 0;  // track how many lines have been executed
@@ -53,7 +59,9 @@ int scheduler_single(SchedulerContext *ctx) {
             if (ctx->aging_policy) {
                 PCB* queued_pcb = ready_queue.head;
                 while (queued_pcb != NULL){
+                    // printf("Updating job score for PCB with PID %d from %d to ", queued_pcb->PID, queued_pcb->job_score);
                     update_job_score(queued_pcb);
+                    // printf("%d.\n", queued_pcb->job_score);
                     queued_pcb = queued_pcb->next;	
                 }
             }
@@ -61,6 +69,10 @@ int scheduler_single(SchedulerContext *ctx) {
             // Add to queue if program not finished, otherwise clean up PCB and program storage
             if (current_pcb->program_counter < end_of_program) {
                 ctx->enqueue_func(current_pcb);
+                // for (PCB* temp = ready_queue.head; temp != NULL; temp = temp->next){
+                //     printf("P%d (%d) ", temp->PID, temp->job_score);
+                // }
+                // printf("\n");
             } else {
                 pcb_cleanup(current_pcb);
             }

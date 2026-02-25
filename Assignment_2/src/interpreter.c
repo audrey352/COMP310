@@ -201,7 +201,7 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
-    printf("calling quit from thread %lu\n", pthread_self());
+    // printf("calling quit from thread %lu\n", pthread_self());
 
     // quit for MT
     if (mt_flag) {
@@ -216,7 +216,7 @@ int quit() {
             if (scheduler_ctx != NULL) {
                 free(scheduler_ctx);
                 scheduler_ctx = NULL;
-                printf("freed context from thread %lu\n", pthread_self());
+                // printf("freed context from thread %lu\n", pthread_self());
             }
 
             printf("Bye!\n");
@@ -236,7 +236,7 @@ int quit() {
 
 int quit_thread() {
     pthread_mutex_lock(&ready_queue_lock);
-    printf("Worker thread %lu setting quit flag\n", pthread_self());
+    // printf("Worker thread %lu setting quit flag\n", pthread_self());
     quit_requested = true;
     pthread_mutex_unlock(&ready_queue_lock);
     return 0;

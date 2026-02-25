@@ -121,3 +121,6 @@ Questions:
 	$ Segmentation fault (core dumped)
 - confused where to join threads + exit
 - problem with # and MT --> MT3 not printing weird stuff half the time??
+
+
+BEFORE SUBMITTING: CLEAN COMMENTS AND REMOVE PRINTS WE HAD WHEN TESTING

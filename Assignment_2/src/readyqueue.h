@@ -12,6 +12,7 @@ typedef struct pcb {
 
 typedef struct ready_queue {
     PCB *head;  // pointer to first PCB in the queue
+	int prev_head_pid;  // PID of the previous head (used for aging policy)
     PCB *tail;  // pointer to last PCB in the queue
 } ReadyQueue;
 
