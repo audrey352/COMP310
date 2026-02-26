@@ -200,11 +200,11 @@ source SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 }
 
 int quit() {
-    printf("Bye!\n");  // to signal that quit was called
+    printf("Bye!\n");
 
-    // quit for MT -- accessed by the threads!
+    // quit for MT -- accessed by the threads! (exiting from main only)
     if (mt_flag) {
-        quit_requested = true;  // doesn't need lock since we only care abut setting it true
+        quit_requested = true;  // doesn't need lock since we only care about setting it true
         return 0;
     }
     // single-threaded quit
@@ -554,7 +554,7 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         }
     }
 
-    //If # is enabled, load PCB to ready queue first. 
+    // If # is enabled, load PCB to ready queue first. 
     if (batch_flag) {
         int start;
         int length;
@@ -575,7 +575,8 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     }
 
     // Create context for scheduler (policy, enqueue/dequeue fcts, etc)
-    SchedulerContext ctx = {
+    SchedulerContext *ctx = malloc(sizeof(SchedulerContext));
+    *ctx = (SchedulerContext){
         .enqueue_func = enqueue_func,
         .dequeue_func = dequeue_func,
         .preemptive = preemptive,
@@ -585,9 +586,9 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 
     // Run the correct scheduler with appropriate context
     if (mt_flag) {
-        return scheduler_multi(&ctx);  // creates 2 worker threads
+        return scheduler_multi(ctx);  // creates 2 worker threads
     } else {
-        return scheduler_single(&ctx);
+        return scheduler_single(ctx);
     }
 
 	return 0;

@@ -38,12 +38,7 @@ int scheduler_single(SchedulerContext *ctx) {
     // Preemptive policies (RR, RR30, & AGING)
     else if (ctx->preemptive == 1) {
         while (ready_queue.head != NULL) {
-            // printf("Jobs in queue: ");
-            // for (PCB* temp = ready_queue.head; temp != NULL; temp = temp->next){
-            //     printf("P%d (%d) ", temp->PID, temp->job_score);
-            // }
-            // printf("\n");
-
+            // get pcb to run
             PCB *current_pcb = ctx->dequeue_func(); 
             int end_of_program = current_pcb->start + current_pcb->program_length;
             int lines_run = 0;  // track how many lines have been executed
@@ -60,26 +55,17 @@ int scheduler_single(SchedulerContext *ctx) {
             if (ctx->aging_policy) {
                 PCB* queued_pcb = ready_queue.head;
                 while (queued_pcb != NULL){
-                    // printf("Updating job score for PCB with PID %d from %d to ", queued_pcb->PID, queued_pcb->job_score);
                     update_job_score(queued_pcb);
-                    // printf("%d.\n", queued_pcb->job_score);
                     queued_pcb = queued_pcb->next;	
                 }
             }
 
-            // Add to queue if program not finished, otherwise clean up PCB and program storage
+            // Add to queue if program not finished
             if (current_pcb->program_counter < end_of_program) {
                 ctx->enqueue_func(current_pcb);
-                // for (PCB* temp = ready_queue.head; temp != NULL; temp = temp->next){
-                //     printf("P%d (%d) ", temp->PID, temp->job_score);
-                // }
-                // printf("\n");
-            } else {
-                pcb_cleanup(current_pcb);
-            }
+            } 
         }
     }
-
     return 0;
 }
 
@@ -119,14 +105,11 @@ void* worker_func(void* arg) {
             lines_run++;
         }
 
-        // Add PCB back to queue if program not finished, otherwise clean up PCB + program storage
+        // Add PCB back to queue if program not finished
         pthread_mutex_lock(&ready_queue_lock);
         if (pcb->program_counter < end_of_program) {
             ctx->enqueue_func(pcb);
         } 
-        // else {
-            // pcb_cleanup(pcb);
-        // }
         pthread_mutex_unlock(&ready_queue_lock);
     }
     return NULL;
@@ -147,19 +130,5 @@ int scheduler_multi(SchedulerContext* ctx) {
     	}
 		pool_initialized = true;
 	}
-
-	// Then block until the threads finish  -- DONT NEED? MAIN HANDLES THREAD JOINING
-	// while (1) {
-	// 	pthread_mutex_lock(&ready_queue_lock);
-	// 	if (ready_queue.head == NULL){
-    //         usleep(1000);  // sleep twice to double check
-    //         if (ready_queue.head == NULL){
-    //             pthread_mutex_unlock(&ready_queue_lock);
-    //             break;
-    //         }
-	// 	}
-	// 	pthread_mutex_unlock(&ready_queue_lock);
-	// 	usleep(1000);
-	// }
     return 0;
 }

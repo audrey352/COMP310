@@ -45,9 +45,9 @@ int main(int argc, char *argv[]) {
 
         if (feof(stdin)) {
             if (mt_flag) {
-                break;
+                break;  // for MT
             } else {
-            return 0;
+            return 0;  // to make sure we get the $ in the correct spot!
             }
         }
 
@@ -60,10 +60,18 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < 2; i++) {
             pthread_join(worker_threads[i], NULL);
         }
+    }
 
-        // free context after threads have finished with it
-        if (scheduler_ctx != NULL) {
-            free(scheduler_ctx);
+     // free context after threads have finished with it
+    if (scheduler_ctx != NULL) {
+        free(scheduler_ctx);
+        scheduler_ctx = NULL;
+    }
+    
+    // free all lines in storage
+    for (int i = 0; i < program_index; i++) {
+        if (program_storage[i] != NULL) {
+            free(program_storage[i]);
         }
     }
 

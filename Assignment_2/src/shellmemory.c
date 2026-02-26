@@ -77,8 +77,6 @@ int next_pid = 1;  // global counter for assigning unique PIDs
 //Before adding the line, it ensures that the index does not exceed max 
 //number of lines allowed (returns -1 for error if that is the case)
 int add_line(char *line) {
-	//printf("Adding: %s at line: %d. \n", line, program_index);
-	
 	if (program_index ==  MAX_STORAGE_LINES){
 		return -1;
 	}

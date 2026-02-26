@@ -123,4 +123,6 @@ Questions:
 - problem with # and MT --> MT3 not printing weird stuff half the time??
 
 
-BEFORE SUBMITTING: CLEAN COMMENTS AND REMOVE PRINTS WE HAD WHEN TESTING
+All problems were fixed. Seg fault issues were coming from scheduler_ctx not being allocated/freed properly and 
+also changed it so that we only free the memory of program storage at the very end before quitting. We don't need 
+to be claning the pcbs as they finish running (it messes up with the threads bc they both modify the contents of program storage)
