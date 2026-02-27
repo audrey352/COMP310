@@ -1,5 +1,0 @@
-exec prog1 prog2 RR MT
-echo progDONE
-echo progDONE2
-echo progDONE3
-quit

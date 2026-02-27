@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-     // free context after threads have finished with it
+    // free context after threads have finished with it
     if (scheduler_ctx != NULL) {
         free(scheduler_ctx);
         scheduler_ctx = NULL;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
         if (program_storage[i] != NULL) {
             free(program_storage[i]);
         }
-    }
+    } 
 
     return 0;
 }

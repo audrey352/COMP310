@@ -31,7 +31,6 @@ int scheduler_single(SchedulerContext *ctx) {
                 parseInput(line);  // execute instruction
                 current_pcb->program_counter++;  // go to next instruction
             }
-            pcb_cleanup(current_pcb);  // remove program from storage and free PCB
         }
     }
 
