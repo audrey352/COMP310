@@ -11,13 +11,14 @@ To-Do:
 	+Partitioning Shell Memory
 	+Code Loading
 	+Page Table
-
+Due March 26
 1.2.2- Demand Paging
 	+Shell Memory Size
 	+Code Loading
 	+Page Faults
-
+Due March 31
 1.2.3- Page Replacement Policy
+Due March 3
 
 Schedule:
 Alexia: 24-26
