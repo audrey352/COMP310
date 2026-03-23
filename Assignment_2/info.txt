@@ -16,10 +16,8 @@ Completed:
 1.2.4. SJF with job aging
 1.2.5 Background Mode 
 	RR30 Policy
-
-Tasks:
 	Execution in the background
-1.2.6 Multithreaded Scehduler
+1.2.6 Multithreaded Scheduler
 Testcases
 Video (1.2.1 & 1.2.2)
 
