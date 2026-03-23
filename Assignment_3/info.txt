@@ -1,0 +1,24 @@
+Assignment 3
+Due March 7
+Try and Complete by March 3
+
+Complete: 
+
+
+To-Do: 
+1.2.1- Implement Paging
+	+Process Sharing
+	+Partitioning Shell Memory
+	+Code Loading
+	+Page Table
+
+1.2.2- Demand Paging
+	+Shell Memory Size
+	+Code Loading
+	+Page Faults
+
+1.2.3- Page Replacement Policy
+
+Schedule:
+Alexia: 24-26
+Audrey: 27-29
