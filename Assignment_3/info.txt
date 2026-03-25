@@ -3,11 +3,11 @@ Due March 7
 Try and Complete by March 3
 
 Complete: 
-
+Process Sharing
 
 To-Do: 
 1.2.1- Implement Paging
-	+Process Sharing
+	xProcess Sharing
 	+Partitioning Shell Memory
 	+Code Loading
 	+Page Table
@@ -26,3 +26,8 @@ Video (1.2.2)
 Schedule:
 Alexia: 24-26
 Audrey: 27-29
+
+Notes:
+Implemented Process Sharing: Basically, i changed the find duplicates to update an array and mark which program 
+it's a duplicate of if it if (-1) otherwise. Then in the program start and length, if it's a duplicate, it just
+copies those values instead of loading anything.

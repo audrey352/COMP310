@@ -475,15 +475,19 @@ int run(char *args[], int arg_size) {
 }
 
 
-bool has_duplicate_files(char *files[], int num_files) {
+bool has_duplicate_files(char *files[], int num_files, int dup[]) {
+    bool flag = false;
+
     for (int i = 0; i < num_files - 1; i++) {
         for (int j = i + 1; j < num_files; j++) {
             if (strcmp(files[i], files[j]) == 0) {
-                return true;
+		dup[j] = i;
+		flag = true;
             }
         }
     }
-    return false;
+
+    return flag;
 }
 
 
@@ -492,15 +496,13 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     int num_programs = args_size - 1;
 	policy = args[num_programs];
     int prog_lengths[num_programs];
+    memset(prog_lengths, -1, sizeof(prog_lengths));
     int prog_starts[num_programs];
+    memset(prog_starts,-1, sizeof(prog_starts));
 
-    // Each exec argument is the name of a different script filename. If two exec arguments are identical, 
-    // the shell has to display an error (of your choice) and exec must terminate, returning the command 
-    // prompt to the user (or keep running the remaining instructions, if in batch mode)
-    if (args_size > 2 && has_duplicate_files(args, num_programs)) {
-        fprintf(stderr, "Error: Duplicate program files provided to exec.\n");
-        return 1;
-   }
+    //We check if there are duplicate programs and set a flag for later.
+    int duplicates[3] = {-1,-1,-1};
+    bool duplicate_flag = has_duplicate_files(args, num_programs, duplicates);
 
     // Set up for different scheduling policies
     void (*enqueue_func)(PCB *);
@@ -537,9 +539,18 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 
     // Load all input programs into memory
     for (int i = 0; i < (num_programs); i++){
+	//check if program already exists in memory
+	int p = duplicates[i];
+	if (p != -1 && duplicate_flag){
+		//if it does, just  copy where the code is
+		prog_lengths[i] = prog_lengths[p];
+		prog_starts[i] = prog_starts[p];
+	}
+	else{
         int err_code; 
         if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i])) != 0)
             return err_code;  // stop if any program doesn't exist or memory is full
+	}
     }
 
     // Create & enqueue all PCBs (only if all programs loaded successfully)
@@ -552,7 +563,10 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         } else {
             enqueue_func(pcb);
         }
+
     }
+
+
 
     // If # is enabled, load PCB to ready queue first. 
     if (batch_flag) {

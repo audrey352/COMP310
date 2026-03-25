@@ -117,8 +117,11 @@ int load_program_file(FILE* f, int* length_out, int* start_out) {
 
 // wrapper function that can load from stream (implemented for batch mode)
 int load_program(char* filename, int* length_out, int* start_out){
+	
+	
 	FILE* fp = fopen(filename, "r");
 	if (fp == NULL) return 1;
+	
 
 	int result = load_program_file(fp, length_out, start_out);
 	if (result == 1){
