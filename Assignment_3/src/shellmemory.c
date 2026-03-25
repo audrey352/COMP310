@@ -69,19 +69,25 @@ char *mem_get_value(char *var_in) {
 }
 
 // Initialize a big array to store all programs
-char *program_storage[MAX_STORAGE_LINES];
+char *program_storage[MAX_STORAGE_FRAMES * FRAME_SIZE];
 int program_index = 0;  // tracks where the next empty line is in program storage
 int next_pid = 1;  // global counter for assigning unique PIDs
 
+
+//REPLACED ADD LINE WITH ADD FRAME:
 //Add line allows you to add lines to the program.
 //Before adding the line, it ensures that the index does not exceed max 
 //number of lines allowed (returns -1 for error if that is the case)
-int add_line(char *line) {
-	if (program_index ==  MAX_STORAGE_LINES){
+int add_frame(char *line[]) {
+	if (program_index + 3 ==  MAX_STORAGE_FRAMES * FRAME_SIZE){
 		return -1;
 	}
-	program_storage[program_index] = strdup(line);
-	return program_index++;
+	
+	program_storage[program_index] = strdup(line[0]);
+	program_storage[program_index+1] = strdup(line[1]);
+	program_storage[program_index+2] = strdup(line[2]);
+	program_index += 3;
+	return program_index;
 }
 
 // Get line simply returns the next line in the array
@@ -102,15 +108,29 @@ int load_program_file(FILE* f, int* length_out, int* start_out) {
 	int count = 0;
 	char buffer[MAX_LINE_LENGTH];
 	
+	char* newFrame[3]; 
+	int counter = 0; 
     // read lines until end of file
-	while (fgets(buffer, MAX_LINE_LENGTH, f)){
-        if (add_line(buffer) < 0) {  // stop if memory full
+	while (fgets(buffer, MAX_LINE_LENGTH, f) != NULL){
+		counter = 0; 
+		newFrame[counter] = buffer;
+		while (counter < 3){
+			if (fgets(buffer, MAX_LINE_LENGTH, f) == NULL){
+				newFrame[counter] = "";
+			}
+			else{
+			newFrame[counter] = buffer;}
+			counter++;
+		}
+		
+        if (add_frame(newFrame) < 0) {  // stop if memory full
             //fprintf(stderr, "Program too long to fit in memory: %s\n", script);
             fclose(f);
             return 1;
         }
         count++;
     }
+
     *length_out = count;
 	return 0;
 }

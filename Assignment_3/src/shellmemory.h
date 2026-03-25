@@ -2,10 +2,11 @@
 #define SHELLMEMORY_H
 
 #define MEM_SIZE 1000
-#define MAX_STORAGE_LINES 1000
+#define MAX_STORAGE_FRAMES 1002
+#define FRAME_SIZE 3
 #define MAX_LINE_LENGTH 1000
 
-extern char *program_storage[MAX_STORAGE_LINES];
+extern char *program_storage[MAX_STORAGE_FRAMES * FRAME_SIZE];
 extern int program_index;
 extern int next_pid;
 
