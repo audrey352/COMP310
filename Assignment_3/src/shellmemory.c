@@ -109,27 +109,32 @@ int load_program_file(FILE* f, int* length_out, int* start_out) {
 	char buffer[MAX_LINE_LENGTH];
 	
 	char* newFrame[3]; 
-	int counter = 0; 
+	int line_in_frame = 0; 
     // read lines until end of file
 	while (fgets(buffer, MAX_LINE_LENGTH, f) != NULL){
-		counter = 0; 
-		newFrame[counter] = buffer;
-		while (counter < 3){
-			if (fgets(buffer, MAX_LINE_LENGTH, f) == NULL){
-				newFrame[counter] = "";
-			}
-			else{
-			newFrame[counter] = buffer;}
-			counter++;
-		}
 		
-        if (add_frame(newFrame) < 0) {  // stop if memory full
-            //fprintf(stderr, "Program too long to fit in memory: %s\n", script);
-            fclose(f);
-            return 1;
-        }
-        count++;
-    }
+		newFrame[line_in_frame] = strdup(buffer);
+		line_in_frame++;
+
+		if (line_in_frame == 3){
+			if (add_frame(newFrame) < 0){
+				//out of space
+				fclose(f);
+				return 1;
+			}
+			line_in_frame = 0;
+			count += 3;
+		}
+	}
+
+	//If we are in the middle of frames
+	if (line_in_frame > 0){
+		for (int i = line_in_frame ; i < 3 ; i++){
+		       newFrame[i] = strdup("");
+		}
+ 		add_frame(newFrame);
+		count += 3;		
+	}
 
     *length_out = count;
 	return 0;
