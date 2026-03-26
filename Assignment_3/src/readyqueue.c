@@ -15,6 +15,7 @@ PCB* create_pcb(int program_start, int program_length) {
     pcb->program_length = program_length;
     pcb->next = NULL;
     pcb->job_score = program_length;
+    pcb->page_table = malloc(sizeof(int)*334);
     return pcb;
 }
 

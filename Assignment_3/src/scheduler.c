@@ -25,11 +25,18 @@ int scheduler_single(SchedulerContext *ctx) {
     if (ctx->preemptive == 0) {
         while (ready_queue.head != NULL) {
             PCB *current_pcb = ctx->dequeue_func(); 
+	    int* pages = current_pcb->page_table;
             // Run full program without preemption
-            while (current_pcb->program_counter < current_pcb->start + current_pcb->program_length) {
-                char *line = get_line(current_pcb->program_counter);
-                parseInput(line);  // execute instruction
-                current_pcb->program_counter++;  // go to next instruction
+	    int counter = 0;
+	    int length = 0;
+            while (pages[counter] > 0 && length < current_pcb->program_length) {
+		for (int i = 0 ; i < 3 ; i++){
+                	char *line = get_line(pages[counter]+i);
+                	parseInput(line);  // execute instruction
+			length++;
+                	current_pcb->program_counter++;  // go to next instruction
+		}
+		counter += 3;
             }
         }
     }
@@ -65,6 +72,7 @@ int scheduler_single(SchedulerContext *ctx) {
             } 
         }
     }
+
     return 0;
 }
 

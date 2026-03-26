@@ -412,7 +412,8 @@ int source(char *script) {
     // Load script into program storage
     int program_length;
     int program_start;
-    if (load_program(script, &program_length, &program_start) != 0)
+    int pages;
+    if (load_program(script, &program_length, &program_start, &pages) != 0)
         return badcommandFileDoesNotExist();
 
     // Create PCB for new program and add to ready-queue
@@ -495,10 +496,14 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 	char* policy;
     int num_programs = args_size - 1;
 	policy = args[num_programs];
-    int prog_lengths[num_programs];
-    memset(prog_lengths, -1, sizeof(prog_lengths));
+    
+	int prog_lengths[num_programs];
+    memset(prog_lengths, -1, sizeof(prog_lengths)); //intialize to -1
+
     int prog_starts[num_programs];
-    memset(prog_starts,-1, sizeof(prog_starts));
+    memset(prog_starts,-1, sizeof(prog_starts)); //intialize to -1
+			
+    int* prog_pages[num_programs];
 
     //We check if there are duplicate programs and set a flag for later.
     int duplicates[3] = {-1,-1,-1};
@@ -545,10 +550,11 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 		//if it does, just  copy where the code is
 		prog_lengths[i] = prog_lengths[p];
 		prog_starts[i] = prog_starts[p];
+		prog_pages[i] = prog_pages[p];
 	}
 	else{
         int err_code; 
-        if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i])) != 0)
+        if ((err_code = load_program(args[i], &prog_lengths[i], &prog_starts[i], prog_pages[i])) != 0)
             return err_code;  // stop if any program doesn't exist or memory is full
 	}
     }
@@ -572,8 +578,9 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     if (batch_flag) {
         int start;
         int length;
+	int pages;
 
-        int code = load_program_file(stdin, &length, &start);  // prog0 = the rest of the script after the exec line
+        int code = load_program_file(stdin, &length, &start, &pages);  // prog0 = the rest of the script after the exec line
         if (code == 0){
             PCB* batch_pcb = create_pcb(start, length);
             if (batch_pcb != NULL){  // put batch program at front of queue
