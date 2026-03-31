@@ -594,14 +594,15 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     }
     // printf("Finished creating PCBs and adding to ready queue.\n");
 
-    // If # is enabled, load PCB to ready queue first. 
+    // If # is enabled, load PCB to ready queue at head. 
     if (batch_flag) {
-        int length;
-	    int pages;
+        int program_length;
+        int *page_table = malloc(sizeof(int) * MAX_STORAGE_FRAMES);
+        memset(page_table, -1, sizeof(int) * MAX_STORAGE_FRAMES);
 
-        int code = load_program_file(stdin, &length, &pages);  // prog0 = the rest of the script after the exec line
+        int code = load_program_file(stdin, &program_length, page_table);  // prog0 = the rest of the script after the exec line
         if (code == 0){
-            PCB* batch_pcb = create_pcb(length, prog_page_tables[0]);  // we can just reuse the page table from the first program since it's all stored in the same place in memory
+            PCB* batch_pcb = create_pcb(program_length, page_table);  // we can just reuse the page table from the first program since it's all stored in the same place in memory
             if (batch_pcb != NULL){  // put batch program at front of queue
                 if (mt_flag) {
                     pthread_mutex_lock(&ready_queue_lock);
