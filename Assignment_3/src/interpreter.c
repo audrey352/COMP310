@@ -411,30 +411,41 @@ int cd(char *path) {
 int source(char *script) {
     // Initialize arrays
     int program_length;
-    int *page_table = malloc(sizeof(int) * MAX_STORAGE_FRAMES);
-    memset(page_table, -1, sizeof(int) * MAX_STORAGE_FRAMES);
+    int *page_table = malloc(sizeof(int) * NUM_FRAMES);
+    memset(page_table, -1, sizeof(int) * NUM_FRAMES);
 
     // Load script into program storage
     if (load_program(script, &program_length, page_table) != 0)
         return badcommandFileDoesNotExist();
 
     // Create PCB for new program and add to ready-queue
-    PCB *pcb = create_pcb(program_length, page_table);  // create PCB with page table --- IGNORE ---
+    PCB *pcb = create_pcb(program_length, page_table);  // create PCB with page table
     enqueue_tail(pcb);
 
     // Run ready queue until empty (using FCFS scheduling)
     while (ready_queue.head != NULL) {
+        // Get program to run
         PCB *current_pcb = dequeue_head(); // remove head from queue
-        // go through program lines
-        while (current_pcb->program_counter < current_pcb->program_length) {
-            char *line = get_line(current_pcb->program_counter);
-            parseInput(line);  // execute instruction
-            current_pcb->program_counter++;  // go to next instruction
+        int* page_table = current_pcb->page_table;
+        int end_of_program = current_pcb->program_length;
+
+        // Run full program
+        while (current_pcb->program_counter < end_of_program) {
+            // get program counter and convert that to an actual line in memory storage using the page table
+            int pc = current_pcb->program_counter;
+            int page   = pc / FRAME_SIZE;  // page number in the program
+            int offset = pc % FRAME_SIZE;  // line within page
+            int frame = page_table[page];  // frame number in memory
+            int index = frame * FRAME_SIZE + offset;  // index of the line in program storage
+
+            // execute the line
+            char *line = get_line(index);
+            if (line[0] != '\0') {  // skip padded lines (added when program doesn't fill a whole frame)
+                parseInput(line);  // execute instruction
+            }
+            current_pcb->program_counter++;  // advance to next instruction (next line in the program)
         }
-
-        // pcb_cleanup(current_pcb);  // remove program from storage and free PCB
     }
-
     return 0;
 }
 
@@ -507,8 +518,8 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     // allocate space for page tables
     int* prog_page_tables[num_programs];  // page table for each program
     for (int i = 0; i < num_programs; i++) {
-        prog_page_tables[i] = malloc(sizeof(int) * MAX_STORAGE_FRAMES); 
-        memset(prog_page_tables[i], -1, sizeof(int) * MAX_STORAGE_FRAMES);  // initialize to -1
+        prog_page_tables[i] = malloc(sizeof(int) * NUM_FRAMES); 
+        memset(prog_page_tables[i], -1, sizeof(int) * NUM_FRAMES);  // initialize to -1
     }
 
     // Check if there are duplicate programs and set a flag for later.
@@ -597,8 +608,8 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     // If # is enabled, load PCB to ready queue at head. 
     if (batch_flag) {
         int program_length;
-        int *page_table = malloc(sizeof(int) * MAX_STORAGE_FRAMES);
-        memset(page_table, -1, sizeof(int) * MAX_STORAGE_FRAMES);
+        int *page_table = malloc(sizeof(int) * NUM_FRAMES);
+        memset(page_table, -1, sizeof(int) * NUM_FRAMES);
 
         int code = load_program_file(stdin, &program_length, page_table);  // prog0 = the rest of the script after the exec line
         if (code == 0){

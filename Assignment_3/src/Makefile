@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=
+CFLAGS = -D FRAME_STORE_SIZE=$(framesize) -D VAR_MEM_SIZE=$(varmemsize)
 FMT=indent
 
 mysh: shell.c interpreter.c shellmemory.c readyqueue.c scheduler.c

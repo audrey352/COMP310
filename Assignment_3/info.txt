@@ -3,20 +3,19 @@ Due April 7
 Try and Complete by March 3
 
 Complete: 
-1.2.1- Implement Paging
+1.2.1 - Implement Paging
 	Process Sharing
 	Partitioning Shell Memory
 	Code Loading
 	Page Table
+1.2.2 - Demand Paging
+	+Shell Memory Size
 
 To-Do: 
-1.2.2- Demand Paging
-	+Shell Memory Size
+1.2.2 - Demand Paging
 	+Code Loading
 	+Page Faults
-Due March 31
-1.2.3- Page Replacement Policy
-Due March 3
+1.2.3 - Page Replacement Policy
 Testcases
 Video (1.2.2)
 
@@ -44,3 +43,14 @@ debugging 1.2.1:
 - when loading a program, the empty lines added to pad the last loaded frame arent counted in program length (otherwise messes up some of the policies)
 - not tracking start of program anymore (its done through the pages!)
 The seg faults were coming from not tracking the pages properly when loading the programs and also from how the page_table was initialized in the pcbs
+
+Shell Memory Size: 
+- assignment uses the variable FRAMESIZE to refer to the total number of lines in the program storage. 
+	in our code we are using this to define the number of lines in a single frame!! (FRAME_STORE_SIZE is our total number of lines)
+- 
+
+
+
+
+
+Note: will need to make sure we cleanup pages + page tables + etc properly when quitting

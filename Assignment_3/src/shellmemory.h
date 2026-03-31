@@ -1,19 +1,21 @@
 #ifndef SHELLMEMORY_H
 #define SHELLMEMORY_H
 #include <stdbool.h>
-#define MEM_SIZE 1000  // max number of variables we can store in memory
-#define MAX_STORAGE_FRAMES 334  // max number of frames we can store in memory
+
+// #define VAR_MEM_SIZE 1000  // max number of variables we can store in memory
+// #define FRAME_STORE_SIZE 999 // total size of program storage 
+// ^^ are defined in the makefile! 
 #define FRAME_SIZE 3  // number of lines per frame
-#define MAX_LINE_LENGTH 1000  // max number of characters in a line of a program
+#define NUM_FRAMES (FRAME_STORE_SIZE / FRAME_SIZE)
+#define MAX_LINE_LENGTH 1000  // max number of characters in a line
 
 struct memory_struct {  // struct for variable memory
     char *var;
     char *value;
 };
 
-extern char *program_storage[MAX_STORAGE_FRAMES * FRAME_SIZE];
-extern bool valid_store[MAX_STORAGE_FRAMES];
-extern int storage_size;
+extern char *program_storage[FRAME_STORE_SIZE];
+extern bool valid_store[NUM_FRAMES];
 extern int next_pid;
 
 void mem_init();

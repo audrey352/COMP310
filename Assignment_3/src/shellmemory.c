@@ -6,12 +6,12 @@
 
 
 // Initialize variable memory
-struct memory_struct shellmemory[MEM_SIZE];  // this is our variables store
+struct memory_struct shellmemory[VAR_MEM_SIZE];  // this is our variables store
 
-// Initialize a big array to store all programs
-char *program_storage[MAX_STORAGE_FRAMES * FRAME_SIZE];  // this is our frame store (frame0 = lines 0-FRAME_SIZE, etc)
-bool valid_store[MAX_STORAGE_FRAMES] = {false};  // array to keep track of which frames are in use (1 if frame is in use, 0 if free))
-int storage_size = MAX_STORAGE_FRAMES * FRAME_SIZE;
+// Initialize program storage (single array to store all frames)
+// ** FRAME_STORE_SIZE is the total number of lines in prog storage. it's defined in the makefile!
+char *program_storage[FRAME_STORE_SIZE];  // this is our frame store (frame0 = lines 0-FRAME_SIZE, etc)
+bool valid_store[NUM_FRAMES] = {false};  // array to keep track of which frames are in use (1 if frame is in use, 0 if free))
 int next_pid = 1;  // global counter for assigning unique PIDs
 
 
@@ -32,7 +32,7 @@ int match(char *model, char *var) {
 
 void mem_init() {
     int i;
-    for (i = 0; i < MEM_SIZE; i++) {
+    for (i = 0; i < VAR_MEM_SIZE; i++) {
         shellmemory[i].var = "none";
         shellmemory[i].value = "none";
     }
@@ -42,7 +42,7 @@ void mem_init() {
 void mem_set_value(char *var_in, char *value_in) {
     int i;
 
-    for (i = 0; i < MEM_SIZE; i++) {
+    for (i = 0; i < VAR_MEM_SIZE; i++) {
         if (strcmp(shellmemory[i].var, var_in) == 0) {
             shellmemory[i].value = strdup(value_in);
             return;
@@ -50,7 +50,7 @@ void mem_set_value(char *var_in, char *value_in) {
     }
 
     //Value does not exist, need to find a free spot.
-    for (i = 0; i < MEM_SIZE; i++) {
+    for (i = 0; i < VAR_MEM_SIZE; i++) {
         if (strcmp(shellmemory[i].var, "none") == 0) {
             shellmemory[i].var = strdup(var_in);
             shellmemory[i].value = strdup(value_in);
@@ -65,7 +65,7 @@ void mem_set_value(char *var_in, char *value_in) {
 char *mem_get_value(char *var_in) {
     int i;
 
-    for (i = 0; i < MEM_SIZE; i++) {
+    for (i = 0; i < VAR_MEM_SIZE; i++) {
         if (strcmp(shellmemory[i].var, var_in) == 0) {
             return strdup(shellmemory[i].value);
         }
@@ -79,7 +79,7 @@ char *mem_get_value(char *var_in) {
 int add_frame(char *line[]) {
 	int free_frame_nb = 0;
 	// printf("looking for a free frame...\n");
-	for (free_frame_nb; free_frame_nb < MAX_STORAGE_FRAMES ; free_frame_nb++){
+	for (free_frame_nb; free_frame_nb < NUM_FRAMES ; free_frame_nb++){
 		// find first free frame in memory
 		if (!valid_store[free_frame_nb]){
 			// printf("Found free frame %d \n", free_frame_nb);

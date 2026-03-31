@@ -17,21 +17,21 @@ pthread_t main_thread;  // global variable to track main thread for quit functio
 int main(int argc, char *argv[]) {
     main_thread = pthread_self();
     setbuf(stdin, NULL);
-    printf("Shell version 1.5 created Dec 2025\n");
-    // printf("main thread id: %lu\n", main_thread);
+    // printf("Shell version 1.5 created Dec 2025\n");
+    printf("Frame Store Size = %d; Variable Store Size = %d\n", FRAME_STORE_SIZE, VAR_MEM_SIZE);
 
-    char prompt = '$';          // Shell prompt
-    char userInput[MAX_USER_INPUT];     // user's input stored here
+    char prompt = '$';  // Shell prompt
+    char userInput[MAX_USER_INPUT];  // user's input stored here
     // batch_mode is true when a file was given.
     int batch_mode = !isatty(STDIN_FILENO);
     int errorCode = 0;          // zero means no error, default
 
-    //init user input
+    // init user input
     for (int i = 0; i < MAX_USER_INPUT; i++) {
         userInput[i] = '\0';
     }
 
-    //init shell memory
+    // init shell memory
     mem_init();
     while (1) {
         if (!batch_mode) {
@@ -68,12 +68,14 @@ int main(int argc, char *argv[]) {
         scheduler_ctx = NULL;
     }
     
-    // free all lines in storage
-    for (int i = 0; i < storage_size; i++) {
+    // free all lines (frames) in program storage
+    for (int i = 0; i < FRAME_STORE_SIZE; i++) {
         if (program_storage[i] != NULL) {
             free(program_storage[i]);
         }
     } 
+
+    // eventually clean page tables?
 
     return 0;
 }
