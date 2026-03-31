@@ -7,30 +7,29 @@
 #include "shellmemory.h"
 
 // Function to initialize a new PCB
-PCB* create_pcb(int program_start, int program_length) {
+PCB* create_pcb(int program_length, int* page_table) {
     PCB *pcb = malloc(sizeof(PCB));
     pcb->PID = next_pid++;
-    pcb->start = program_start;
-    pcb->program_counter = program_start;  // start executing at the first instruction
+    pcb->program_counter = 0;  // pc gives us how far along the program (pages) we are, start at index 0
     pcb->program_length = program_length;
     pcb->next = NULL;
     pcb->job_score = program_length;
-    pcb->page_table = malloc(sizeof(int)*334);
+    pcb->page_table = page_table;  // [page0, page1, page2, ...] where each entry is the frame number where that page is stored in memory
     return pcb;
 }
 
 // Function to clean up a PCB and free its resources
 // NOT removing from queue (should be done beforehand)
-int pcb_cleanup(PCB *pcb) {
-    // free the lines of the program from storage
-    for (int i = pcb->start; i < pcb->start + pcb->program_length; i++) {
-	    free(program_storage[i]);
-        program_storage[i] = NULL;
-    }
+// int pcb_cleanup(PCB *pcb) {
+//     // free the lines of the program from storage
+//     for (int i = pcb->start; i < pcb->start + pcb->program_length; i++) {
+// 	    free(program_storage[i]);
+//         program_storage[i] = NULL;
+//     }
     
-    free(pcb);
-    return 0;
-}
+//     free(pcb);
+//     return 0;
+// }
 
 
 // Function for updating the job score

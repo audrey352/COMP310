@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     }
     
     // free all lines in storage
-    for (int i = 0; i < program_index; i++) {
+    for (int i = 0; i < storage_size; i++) {
         if (program_storage[i] != NULL) {
             free(program_storage[i]);
         }

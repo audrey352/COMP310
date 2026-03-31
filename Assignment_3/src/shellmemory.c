@@ -4,12 +4,16 @@
 #include <stdbool.h>
 #include "shellmemory.h"
 
-struct memory_struct {
-    char *var;
-    char *value;
-};
 
-struct memory_struct shellmemory[MEM_SIZE];
+// Initialize variable memory
+struct memory_struct shellmemory[MEM_SIZE];  // this is our variables store
+
+// Initialize a big array to store all programs
+char *program_storage[MAX_STORAGE_FRAMES * FRAME_SIZE];  // this is our frame store (frame0 = lines 0-FRAME_SIZE, etc)
+bool valid_store[MAX_STORAGE_FRAMES] = {false};  // array to keep track of which frames are in use (1 if frame is in use, 0 if free))
+int storage_size = MAX_STORAGE_FRAMES * FRAME_SIZE;
+int next_pid = 1;  // global counter for assigning unique PIDs
+
 
 // Helper functions
 int match(char *model, char *var) {
@@ -69,32 +73,33 @@ char *mem_get_value(char *var_in) {
     return NULL;
 }
 
-// Initialize a big array to store all programs
-char *program_storage[MAX_STORAGE_FRAMES * FRAME_SIZE];
-bool valid_store[MAX_STORAGE_FRAMES] = {false};
-int program_index = 0;  // tracks where the next empty line is in program storage
-int next_pid = 1;  // global counter for assigning unique PIDs
 
-
-//REPLACED ADD LINE WITH ADD FRAME:
-//Add line allows you to add lines to the program.
-//Before adding the line, it ensures that the index does not exceed max 
-//number of lines allowed (returns -1 for error if that is the case)
+// Find first free frame in memory and add the lines of the program to that frame.
+// Returns -1 if memory is full, otherwise returns the frame number where the program was added.
 int add_frame(char *line[]) {
-	int free_page = 0;
-	for (free_page; free_page < MAX_STORAGE_FRAMES ; free_page++){
-		if ( !valid_store[free_page] ){
-			//insert lines
-			program_storage[free_page*3] = strdup(line[0]);
-			program_storage[free_page*3+1] = strdup(line[1]);
-			program_storage[free_page*3+2] = strdup(line[2]);
-			//set bits and return
-			valid_store[free_page] = 1;
-			printf("Found free page at: %d \n", free_page);
-			return free_page;
+	int free_frame_nb = 0;
+	// printf("looking for a free frame...\n");
+	for (free_frame_nb; free_frame_nb < MAX_STORAGE_FRAMES ; free_frame_nb++){
+		// find first free frame in memory
+		if (!valid_store[free_frame_nb]){
+			// printf("Found free frame %d \n", free_frame_nb);
+			// printf("Adding lines in storage at indices %d, %d, and %d \n", free_frame_nb*FRAME_SIZE, free_frame_nb*FRAME_SIZE+1, free_frame_nb*FRAME_SIZE+2);
+			// insert lines
+			program_storage[free_frame_nb*FRAME_SIZE] = strdup(line[0]);
+			program_storage[free_frame_nb*FRAME_SIZE+1] = strdup(line[1]);
+			program_storage[free_frame_nb*FRAME_SIZE+2] = strdup(line[2]);
+			// for (int i = 0; i < FRAME_SIZE; i++){
+			// 	printf("Added to storage: %s", program_storage[free_frame_nb*FRAME_SIZE+i]);
+			// }
+			// if (line[2][strlen(line[2])-1] != '\n') {
+			// 	printf("\n");
+			// }
+
+			// set bit to valid & return frame number 
+			valid_store[free_frame_nb] = 1;
+			return free_frame_nb;
 		}
 	}
-
 	return -1;
 }
 
@@ -103,6 +108,7 @@ char* get_line(int index){
 	return program_storage[index];
 }
 
+// Clean frames used by a program (used when program finishes or is killed)
 int clean_frames(int length, int* page_table){
 	for (int i = 0 ; i < length; i++){
 		int index = page_table[i];
@@ -111,66 +117,87 @@ int clean_frames(int length, int* page_table){
 	return 0;
 }
 
-//og function that was renamed to take input from stream
-// Load program line by line into memory. 
+// Load program line by line into memory using frames. 
 // Returns 0 on success, and 1 if the file doesn't exist or the program is too long to fit in memory. 
-int load_program_file(FILE* f, int* length_out, int* start_out, int* page_table) {
+int load_program_file(FILE* f, int* length_out, int* page_table) {
     // Make sure file exists
     if (f == NULL) return 1;
 
     // program info 
-    *start_out = program_index;
-	int count = 0;
+	int line_count = 0;  // total number of lines read in so far
 	char buffer[MAX_LINE_LENGTH];
 	
-	char* newFrame[3]; 
-	int line_in_frame = 0;
-       	int page_number = -1;	
+	// frame info
+	char* newFrame[FRAME_SIZE];  // 3 lines per frame
+	int line_in_frame = 0;  // number of lines read into the current frame so far
+    int frame_number = -1;	// frame number in program storage 
+
+	// printf("Loading program into memory... \n");
+
     // read lines until end of file
 	while (fgets(buffer, MAX_LINE_LENGTH, f) != NULL){
 		
-		newFrame[line_in_frame] = strdup(buffer);
+		newFrame[line_in_frame] = strdup(buffer);  // copy line into frame
+		// printf("Reading line: %s", buffer);
+		// if (buffer[strlen(buffer)-1] != '\n') {
+		// 	printf("\n");
+		// }
 		line_in_frame++;
 
-		if (line_in_frame == 3){
-			page_number = add_frame(newFrame);
-			if (page_number < 0){
-				//out of space
+		// if frame is full, add to memory and update page table
+		if (line_in_frame == FRAME_SIZE){
+			frame_number = add_frame(newFrame);
+			// printf("Lines successfully added to frame %d \n", frame_number);
+			if (frame_number < 0){  // out of space
+				fprintf(stderr, "Program too long to fit in memory\n");
 				fclose(f);
 				return 1;
 			}
-			page_table[count/3] = page_number; //insert the page number in page table
+			// set page_table entry for this frame (eg. page0 = frame8 in memory)
+			int page_number = line_count/FRAME_SIZE;
+			page_table[page_number] = frame_number; // insert the frame number in page table (of this program)
 			line_in_frame = 0;
-			count += 3;
-			printf("Added to page table: %d \n", page_number);
+			line_count += FRAME_SIZE;
+			// printf("Done adding to page table. Mapping page %d to frame %d \n", page_number, frame_number);
 		}
 	}
 
-	//If we are in the middle of frames
+	// If we were in the middle of a frame when we hit the end of the file...
 	if (line_in_frame > 0){
-		for (int i = line_in_frame ; i < 3 ; i++){
-		       newFrame[i] = strdup("");
+		// printf("End of file reached, adding empty lines to frame... \n");
+
+		// fill rest of frame with empty strings
+		for (int i = line_in_frame ; i < FRAME_SIZE ; i++){
+		    newFrame[i] = strdup("");
 		}
- 		add_frame(newFrame);
-		count += 3;		
+		// add to memory and update page table
+		frame_number = add_frame(newFrame);
+		if (frame_number < 0){  // out of space
+			fclose(f);
+			return 1;
+		}
+		int page_number = line_count/FRAME_SIZE;
+		page_table[page_number] = frame_number;  
+		line_count += line_in_frame;  // only count the actual code lines, not the padded empty lines
+		// printf("Added padded frame to page table: %d \n", frame_number);
 	}
 
-    *length_out = count;
+    *length_out = line_count;
 	return 0;
 }
 
 // wrapper function that can load from stream (implemented for batch mode)
-int load_program(char* filename, int* length_out, int* start_out, int* page_table){
-	
+int load_program(char* filename, int* length_out, int* page_table){
 	
 	FILE* fp = fopen(filename, "r");
 	if (fp == NULL) return 1;
 	
-
-	int result = load_program_file(fp, length_out, start_out, page_table);
+	// printf("(load_program) Loading program: %s \n", filename);
+	int result = load_program_file(fp, length_out, page_table);
 	if (result == 1){
 		fprintf(stderr, "Program too long to fit in memory: %s\n", filename);
 	}
+	// printf("Finished loading program (return %d): %s \n", result, filename);
 
 	fclose(fp);
 	return result;

@@ -19,7 +19,7 @@ typedef struct ready_queue {
 
 extern ReadyQueue ready_queue;  // global ready queue
 
-PCB* create_pcb(int program_start, int program_length);
+PCB* create_pcb(int program_length, int* page_table);
 int pcb_cleanup(PCB *pcb);
 int update_job_score(PCB* pcb);
 

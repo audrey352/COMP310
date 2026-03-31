@@ -1,16 +1,16 @@
 Assignment 3
-Due March 7
+Due April 7
 Try and Complete by March 3
 
 Complete: 
-Process Sharing
+1.2.1- Implement Paging
 
 To-Do: 
 1.2.1- Implement Paging
 	xProcess Sharing
-	+Partitioning Shell Memory
-	+Code Loading
-	+Page Table
+	xPartitioning Shell Memory
+	xCode Loading
+	xPage Table
 Due March 26
 1.2.2- Demand Paging
 	+Shell Memory Size
@@ -31,3 +31,12 @@ Notes:
 Implemented Process Sharing: Basically, i changed the find duplicates to update an array and mark which program 
 it's a duplicate of if it if (-1) otherwise. Then in the program start and length, if it's a duplicate, it just
 copies those values instead of loading anything.
+
+debugging: 
+- added comments and made the distinction bw page number and frame number clearer in scheduler & shell memory.
+	we have page table = [page0, page1, page2, ...] where each entry is the frame number in memory for that page.
+- Think about our program as being N lines split into pages, and the program counter tells us how far along we are. 
+	I updated program_counter in the pcb to just track the line index we are at in the program (starting at 0)
+- when we want to run a line, we get the pc and convert that to a page number ie a frame, and then get the line position in memory
+	eg. if pc = 4, then we are at page1 which could be frame4 in memory so line at index 12 in storage.
+	This allows us to get the correct lines in memory even if the pages are not allocated contiguously

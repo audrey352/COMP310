@@ -24,19 +24,26 @@ int scheduler_single(SchedulerContext *ctx) {
     // Non-preemptive policies (FCFS and SJF)
     if (ctx->preemptive == 0) {
         while (ready_queue.head != NULL) {
+            // Get program to run
             PCB *current_pcb = ctx->dequeue_func(); 
-	    int* pages = current_pcb->page_table;
+            int* page_table = current_pcb->page_table;
+            int end_of_program = current_pcb->program_length;
+
             // Run full program without preemption
-	    int counter = 0;
-	    int length = 0;
-            while (pages[counter] > 0 && length < current_pcb->program_length) {
-		for (int i = 0 ; i < 3 ; i++){
-                	char *line = get_line(pages[counter]+i);
-                	parseInput(line);  // execute instruction
-			length++;
-                	current_pcb->program_counter++;  // go to next instruction
-		}
-		counter += 3;
+            while (current_pcb->program_counter < end_of_program) {
+                // get program counter and convert that to an actual line in memory storage using the page table
+                int pc = current_pcb->program_counter;
+                int page   = pc / FRAME_SIZE;  // page number in the program
+                int offset = pc % FRAME_SIZE;  // line within page
+                int frame = page_table[page];  // frame number in memory
+                int index = frame * FRAME_SIZE + offset;  // index of the line in program storage
+
+                // execute the line
+                char *line = get_line(index);
+                if (line[0] != '\0') {  // skip padded lines (added when program doesn't fill a whole frame)
+                    parseInput(line);  // execute instruction
+                }
+                current_pcb->program_counter++;  // advance to next instruction (next line in the program)
             }
         }
     }
@@ -46,13 +53,23 @@ int scheduler_single(SchedulerContext *ctx) {
         while (ready_queue.head != NULL) {
             // get pcb to run
             PCB *current_pcb = ctx->dequeue_func(); 
-            int end_of_program = current_pcb->start + current_pcb->program_length;
-            int lines_run = 0;  // track how many lines have been executed
+            int* page_table = current_pcb->page_table;
+            int end_of_program = current_pcb->program_length;
+            int lines_run = 0;  // track how many lines have been executed in this time slice
 
             while (lines_run < ctx->time_slice && current_pcb->program_counter < end_of_program) {
-                char *line = get_line(current_pcb->program_counter);
-                parseInput(line);  // execute instruction
-                current_pcb->program_counter++;  // go to next instruction
+                // get program counter and convert that to an actual line in memory storage using the page table
+                int pc = current_pcb->program_counter;
+                int page   = pc / FRAME_SIZE;  // page number in the program
+                int offset = pc % FRAME_SIZE;  // line within page
+                int frame = page_table[page];  // frame number in memory
+                int index = frame * FRAME_SIZE + offset;  // index of the line in program storage
+
+                char *line = get_line(index);
+                if (line[0] != '\0') {  // skip padded lines (added when program doesn't fill a whole frame)
+                    parseInput(line);  // execute instruction
+                }
+                current_pcb->program_counter++;  // advance to next instruction (next line in the program)
                 lines_run++;
             }
 
@@ -66,18 +83,18 @@ int scheduler_single(SchedulerContext *ctx) {
                 }
             }
 
-            // Add to queue if program not finished
+            // Add back to queue if program not finished
             if (current_pcb->program_counter < end_of_program) {
                 ctx->enqueue_func(current_pcb);
             } 
         }
     }
-
     return 0;
 }
 
 
 // Worker function for multi-threaded scheduler (only used with RR and RR30 policies)
+// NOT UPDATED FOR DEMAND PAGING 
 void* worker_func(void* arg) {
 	SchedulerContext* ctx = (SchedulerContext*) arg;
 
@@ -102,7 +119,7 @@ void* worker_func(void* arg) {
         pthread_mutex_unlock(&ready_queue_lock);
 
         // Run the program for one time slice
-        int end_of_program = pcb->start + pcb->program_length;
+        int end_of_program = pcb->program_length;
         int lines_run = 0;  // track how many lines have been executed in this time slice
 	
         while (lines_run < ctx->time_slice && pcb->program_counter < end_of_program) {
