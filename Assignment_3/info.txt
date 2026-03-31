@@ -4,14 +4,12 @@ Try and Complete by March 3
 
 Complete: 
 1.2.1- Implement Paging
+	Process Sharing
+	Partitioning Shell Memory
+	Code Loading
+	Page Table
 
 To-Do: 
-1.2.1- Implement Paging
-	xProcess Sharing
-	xPartitioning Shell Memory
-	xCode Loading
-	xPage Table
-Due March 26
 1.2.2- Demand Paging
 	+Shell Memory Size
 	+Code Loading
@@ -24,15 +22,15 @@ Video (1.2.2)
 
 
 Schedule:
-Alexia: 24-26
-Audrey: 27-29
+Alexia: ??
+Audrey: tuesday (10-2 & after 6pm), wednesday (after 8pm), thursday (10-2pm & after 7pm)
 
 Notes:
 Implemented Process Sharing: Basically, i changed the find duplicates to update an array and mark which program 
 it's a duplicate of if it if (-1) otherwise. Then in the program start and length, if it's a duplicate, it just
 copies those values instead of loading anything.
 
-debugging: 
+debugging 1.2.1: 
 - added comments and made the distinction bw page number and frame number clearer in scheduler & shell memory.
 	we have page table = [page0, page1, page2, ...] where each entry is the frame number in memory for that page.
 - Think about our program as being N lines split into pages, and the program counter tells us how far along we are. 
@@ -40,3 +38,9 @@ debugging:
 - when we want to run a line, we get the pc and convert that to a page number ie a frame, and then get the line position in memory
 	eg. if pc = 4, then we are at page1 which could be frame4 in memory so line at index 12 in storage.
 	This allows us to get the correct lines in memory even if the pages are not allocated contiguously
+- page table created first and then passed to the create_pcb function
+- lots of print statements are commented out, they're useful for debugging and tracking whats happening with the pages
+- updated the A2 test_list.txt to not run tests with MT and #
+- when loading a program, the empty lines added to pad the last loaded frame arent counted in program length (otherwise messes up some of the policies)
+- not tracking start of program anymore (its done through the pages!)
+The seg faults were coming from not tracking the pages properly when loading the programs and also from how the page_table was initialized in the pcbs
