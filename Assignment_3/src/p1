@@ -1,4 +1,0 @@
-echo hellop1
-set x 10
-echo $x
-echo byep1
