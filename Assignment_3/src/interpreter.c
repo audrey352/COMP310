@@ -26,6 +26,7 @@
 #include "shell.h"
 #include "readyqueue.h"
 #include "scheduler.h"
+#include "policy.h"
 
 int badcommand() {
     printf("Unknown Command\n");
@@ -516,7 +517,7 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     memset(prog_lengths, -1, sizeof(prog_lengths)); //intialize to -1	
 
     // allocate space for page tables
-    int* prog_page_tables[num_programs];  // page table for each program
+    int* prog_page_tables[num_programs];  // array of page tables (one table per program)
     for (int i = 0; i < num_programs; i++) {
         prog_page_tables[i] = malloc(sizeof(int) * NUM_FRAMES); 
         memset(prog_page_tables[i], -1, sizeof(int) * NUM_FRAMES);  // initialize to -1
@@ -526,39 +527,6 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     int duplicates[num_programs];  // duplicates occurences of files will have index of first occurrence, otherwise -1
     for (int i = 0; i < num_programs; i++) {duplicates[i] = -1;} // initialize all entries to -1
     bool duplicate_flag = has_duplicate_files(args, num_programs, duplicates);
-
-    // Set up for different scheduling policies
-    void (*enqueue_func)(PCB *);
-    PCB* (*dequeue_func)();
-    dequeue_func = dequeue_head;  // always dequeue from head, keep queues sorted based on policy when enqueuing
-    int preemptive;  // 0 for preemptive, 1 for non-preemptive
-    bool aging_policy = false;
-    int time_slice;  // number of lines to run before switching to next program (only used for preemptive policies)
-
-    // Check that policy is valid & set functions/variables
-    if (strcmp(policy, "FCFS") == 0){
-        enqueue_func = enqueue_tail;
-        preemptive = 0;
-	} else if (strcmp(policy, "SJF") == 0) {
-		enqueue_func = enqueue_sjf;
-        preemptive = 0;
-	} else if (strcmp(policy, "RR") == 0){
-		enqueue_func = enqueue_tail;
-        preemptive = 1;
-        time_slice = 2;
-    } else if (strcmp(policy, "RR30") == 0){
-        enqueue_func = enqueue_tail;
-        preemptive = 1;
-        time_slice = 30;
-	} else if (strcmp(policy, "AGING") == 0) {
-        enqueue_func = enqueue_aging;  //we will use the same enqueue as SJF just with additional aging...
-        preemptive = 1;
-        time_slice = 1;
-        aging_policy = true;
-	} else {
- 		fprintf(stderr, "Invalid Policy: %s, \n", policy);
-        return 1; 		
-	}
 
     // printf("number of programs: %d \n", num_programs);
     // printf("programs: ");
@@ -626,15 +594,9 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         }
     }
 
-    // Create context for scheduler (policy, enqueue/dequeue fcts, etc)
-    SchedulerContext *ctx = malloc(sizeof(SchedulerContext));
-    *ctx = (SchedulerContext){
-        .enqueue_func = enqueue_func,
-        .dequeue_func = dequeue_func,
-        .preemptive = preemptive,
-        .aging_policy = aging_policy,
-        .time_slice = time_slice
-    };
+    // Get context for the scheduler
+    SchedulerContext* ctx = get_scheduler_context(policy);
+    if (!ctx) return 1;
 
     // Run the correct scheduler with appropriate context
     if (mt_flag) {

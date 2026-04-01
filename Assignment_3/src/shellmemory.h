@@ -9,13 +9,20 @@
 #define NUM_FRAMES (FRAME_STORE_SIZE / FRAME_SIZE)
 #define MAX_LINE_LENGTH 1000  // max number of characters in a line
 
-struct memory_struct {  // struct for variable memory
+struct var_memory_struct {  // struct for variable memory
     char *var;
     char *value;
 };
 
+struct Frame {  // struct for metadata of each frame in program storage
+    int valid;  // 0 = free, 1 = used, -1 = uninitialized
+    int num_pids;  // how many processes are sharing this frame (in case of duplicates)
+    int process_pid[3];  // which process does the page in this frame belong to? can be up to 3 in case of duplicates
+    int page_number;  // which page is stored in this frame? -> single bc specific lines in code
+};
+
 extern char *program_storage[FRAME_STORE_SIZE];
-extern bool valid_store[NUM_FRAMES];
+struct Frame all_frames[NUM_FRAMES];
 extern int next_pid;
 
 void mem_init();
@@ -24,8 +31,12 @@ void mem_set_value(char *var, char *value);
 
 int add_line(char *line);
 char* get_line(int index);
-int clean_frames(int length, int* page_table);
-int load_program(char *script, int* length_out, int* page_table);
-int load_program_file(FILE *fp, int* length_out, int* page_table);
+struct Frame create_frame(int pids[], int num_pids, int page_number);
+int add_frame(char *lines[], int pid, int page_number, int* frame_number_out);
+int load_next_page(FILE* f, int pid, int page_number, int* frame_number_out);
+int load_init(FILE* f, int pid, int* length_out, int* page_table);
+// int clean_frames(int length, int* page_table);
+// int load_program(char *script, int* length_out, int* page_table);
+// int load_program_file(FILE *fp, int* length_out, int* page_table);
 
 #endif

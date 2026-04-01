@@ -18,19 +18,6 @@ PCB* create_pcb(int program_length, int* page_table) {
     return pcb;
 }
 
-// Function to clean up a PCB and free its resources
-// NOT removing from queue (should be done beforehand)
-// int pcb_cleanup(PCB *pcb) {
-//     // free the lines of the program from storage
-//     for (int i = pcb->start; i < pcb->start + pcb->program_length; i++) {
-// 	    free(program_storage[i]);
-//         program_storage[i] = NULL;
-//     }
-    
-//     free(pcb);
-//     return 0;
-// }
-
 
 // Function for updating the job score
 int update_job_score(PCB *pcb){
