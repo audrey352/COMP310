@@ -557,7 +557,7 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         } else {  // load program in memory
             int err_code; 
             if ((err_code = load_init(args[i], &prog_lengths[i], prog_page_tables[i])) != 0) {
-                printf("Error loading program %s: file doesn't exist or program too long to fit in memory\n", args[i]);
+                printf("Error loading program %s: file doesn't exist\n", args[i]);
                 return err_code;  // stop if a program doesn't exist or memory is full
             }
         }

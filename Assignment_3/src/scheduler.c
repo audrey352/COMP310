@@ -24,19 +24,19 @@ static bool pool_initialized = false;
 static int check_page_in_memory(PCB *pcb, int page_number, int *frame_out) {
     int frame = pcb->page_table[page_number];  // frame number
     if (frame == -1) return 0;  // not in memory
-    *frame_out = frame;  //set frame_out if in memory
+    *frame_out = frame;  // set frame_out if in memory
     return 1;
 }
 
 // Loads the page into memory, updates PCB page table
 static int handle_page_fault(PCB *pcb, int page_number) {
-    printf("Page fault!\n");         
-    // load page into memory
+    printf("Page fault! ");         
+    // load page into memory (will evict a page if memory is full)
     int frame;
-    if (load_next_page(pcb->prog_name, page_number, &frame) != 0) {
-        return 1;  // error loading page into memory
+    if (load_page(pcb->prog_name, page_number, pcb->page_table) != 0) {
+        return 1;  // error with file
     }
-    pcb->page_table[page_number] = frame;  // update page table with new frame number
+    printf("\n");
     return 0;
 }
 
@@ -67,8 +67,9 @@ static int run_pcb(PCB *pcb, int max_num_lines) {
         int frame; 
 
         if (!check_page_in_memory(pcb, page, &frame)) {  // page not in memory -> page fault
-            if (handle_page_fault(pcb, page) != 0) return -1;  // error loading page in memory
-            return 1;  // stop running this program due to page fault (need to put back in queue)
+            int res = handle_page_fault(pcb, page);
+            if (handle_page_fault(pcb, page) != 0) return -1;  // error with file
+            return 1;  // stop running this program due to page fault (need to put pcb back in queue)
         }
 
         execute_current_line(pcb);  // execute the line and update program counter
@@ -91,8 +92,8 @@ int scheduler_single(SchedulerContext *ctx) {
             if (result == 1) {
                 ctx->enqueue_func(current_pcb);  // put back in queue if page fault
             } else if (result == -1) {
-                return 1;  // error loading page into memory
-            }
+                return 1;  // error with file
+            } // if result = 0, program finished so don't add back to queue
         }
     }
 
@@ -107,21 +108,19 @@ int scheduler_single(SchedulerContext *ctx) {
             // run until page fault, end of program, or time slice is up
             int result = run_pcb(current_pcb, time_slice);  // run until page fault or time slice up
             if (result == -1) {
-                return 1;  // error loading page into memory
+                return 1;  // error with file
             }
-            else if (result == 0) {
+            else if (result == 0 && ctx->aging_policy) {  // slice done running -> update job scores for rest of queue if AGING policy
                 // AGING policy: Update scores of jobs left in queue
                 // all decreasing by 1 so order shouldn't change, enqueue will add back the job that ran in the correct spot
-                if (ctx->aging_policy) {
-                    PCB* queued_pcb = ready_queue.head;
-                    while (queued_pcb != NULL){
-                        update_job_score(queued_pcb);
-                        queued_pcb = queued_pcb->next;	
-                    }
-                }  // only updating if slice ran fully (won't be tested)
-            }
+                PCB* queued_pcb = ready_queue.head;
+                while (queued_pcb != NULL){
+                    update_job_score(queued_pcb);
+                    queued_pcb = queued_pcb->next;	
+                }
+            }  
 
-            // Add back to queue if program not finished
+            // Add back to queue if program not finished (after page fault/done time slice)
             if (current_pcb->program_counter < end_of_program) {
                 ctx->enqueue_func(current_pcb);
             } 
@@ -130,78 +129,6 @@ int scheduler_single(SchedulerContext *ctx) {
     return 0;
 }
 
-// Function to run the single threaded scheduler using paaging
-// int scheduler_single(SchedulerContext *ctx) {
-//     // Non-preemptive policies (FCFS and SJF)
-//     if (ctx->preemptive == 0) {
-//         while (ready_queue.head != NULL) {
-//             // Get program to run
-//             PCB *current_pcb = ctx->dequeue_func(); 
-//             int* page_table = current_pcb->page_table;
-//             int end_of_program = current_pcb->program_length;
-
-//             // Run full program without preemption
-//             while (current_pcb->program_counter < end_of_program) {
-//                 // get program counter and convert that to an actual line in memory storage using the page table
-//                 int pc = current_pcb->program_counter;
-//                 int page   = pc / FRAME_SIZE;  // page number in the program
-//                 int offset = pc % FRAME_SIZE;  // line within page
-//                 int frame = page_table[page];  // frame number in memory
-//                 int index = frame * FRAME_SIZE + offset;  // index of the line in program storage
-
-//                 // execute the line
-//                 char *line = get_line(index);
-//                 if (line[0] != '\0') {  // skip padded lines (added when program doesn't fill a whole frame)
-//                     parseInput(line);  // execute instruction
-//                 }
-//                 current_pcb->program_counter++;  // advance to next instruction (next line in the program)
-//             }
-//         }
-//     }
-
-//     // Preemptive policies (RR, RR30, & AGING)
-    // else if (ctx->preemptive == 1) {
-    //     while (ready_queue.head != NULL) {
-            // get pcb to run
-            // PCB *current_pcb = ctx->dequeue_func(); 
-            // int* page_table = current_pcb->page_table;
-            // int end_of_program = current_pcb->program_length;
-            // int lines_run = 0;  // track how many lines have been executed in this time slice
-
-        //     // while (lines_run < ctx->time_slice && current_pcb->program_counter < end_of_program) {
-        //         // get program counter and convert that to an actual line in memory storage using the page table
-        //         int pc = current_pcb->program_counter;
-        //         int page   = pc / FRAME_SIZE;  // page number in the program
-        //         int offset = pc % FRAME_SIZE;  // line within page
-        //         int frame = page_table[page];  // frame number in memory
-        //         int index = frame * FRAME_SIZE + offset;  // index of the line in program storage
-
-        //         char *line = get_line(index);
-        //         if (line[0] != '\0') {  // skip padded lines (added when program doesn't fill a whole frame)
-        //             parseInput(line);  // execute instruction
-        //         }
-        //         current_pcb->program_counter++;  // advance to next instruction (next line in the program)
-        //         lines_run++;
-        //     }
-
-        //     // AGING policy: Update scores of jobs left in queue
-        //     // all decreasing by 1 so order shouldn't change, enqueue will add back the job that ran in the correct spot
-        //     if (ctx->aging_policy) {
-        //         PCB* queued_pcb = ready_queue.head;
-        //         while (queued_pcb != NULL){
-        //             update_job_score(queued_pcb);
-        //             queued_pcb = queued_pcb->next;	
-        //         }
-        //     }
-
-        //     // Add back to queue if program not finished
-        //     if (current_pcb->program_counter < end_of_program) {
-        //         ctx->enqueue_func(current_pcb);
-        //     } 
-        // }
-//     }
-//     return 0;
-// }
 
 
 // Worker function for multi-threaded scheduler (only used with RR and RR30 policies)

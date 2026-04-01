@@ -79,18 +79,69 @@ char* get_line(int index){
 
 
 // Function to initialize a new Frame struct
-struct Frame create_frame(char* prog_name, int page_number) {
+struct Frame create_frame(char* prog_name, int page_number, int* page_table) {
 	struct Frame frame;
 	frame.valid = 1;  // mark frame as used
-	frame.prog_name = strdup(prog_name);  // store program name in frame struct
-	frame.page_number = page_number;
+	frame.prog_name = strdup(prog_name);  // store program name
+	frame.page_number = page_number;  // store new page number
+	frame.page_table = page_table;  // store pointer to PCB's page table
 	return frame;
 }
 
 
-// Find first free frame in memory and add the lines to it.
-// Returns -1 if memory is full, otherwise returns the frame number where the program was added.
-int add_frame(char *lines[], char* prog_name, int page_number, int* frame_number_out) {
+void free_frame_storage(int frame_index) {
+    int start = frame_index * FRAME_SIZE;
+	// free the lines in the frame storage and set to NULL
+    for (int i = 0; i < FRAME_SIZE; i++) {
+        if (program_storage[start + i] != NULL) {
+            free(program_storage[start + i]);
+            program_storage[start + i] = NULL;
+        }
+    }
+	// free the prog_name in the frame struct and set to NULL
+    if (all_frames[frame_index].prog_name != NULL) {
+        free(all_frames[frame_index].prog_name);
+        all_frames[frame_index].prog_name = NULL;
+    }
+}
+
+
+// Function to evict a page from memory and replace it with a new page
+int replace_page(char* new_prog_name, int new_page_number, int* new_page_table) {
+	// pick a victim page to evict (randomly pick a frame that is currently in use)
+	int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
+	
+	// print the contents of the victim page
+	printf("Victim page contents: \n\n");
+	int victim_start = victim_frame * FRAME_SIZE;
+	for (int i = 0; i < FRAME_SIZE; i++) {
+		char *line = program_storage[victim_start + i];
+		if (line != NULL) {
+			printf("%s", line);
+		}
+	}
+	printf("\nEnd of victim page contents.");
+
+	// update old page table & free frame memory
+	int old_page_number = all_frames[victim_frame].page_number;
+	int* old_page_table = all_frames[victim_frame].page_table;
+	old_page_table[old_page_number] = -1;  // mark page as not in memory
+	free_frame_storage(victim_frame);
+
+	// update new page table and frame metadata with new page info
+	new_page_table[new_page_number] = victim_frame;
+	all_frames[victim_frame].prog_name = strdup(new_prog_name);
+	all_frames[victim_frame].page_number = new_page_number;
+	all_frames[victim_frame].page_table = new_page_table;
+
+	return victim_frame;
+}
+
+
+// Find first free frame in memory and add the lines to it, otherwise evicts a page.
+// Also updates page table with the new frame number where the page is stored in memory.
+// returns 0 if found free space, 1 if memory was full and a page had to be evicted to make space.
+int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) {
     for (int i = 0; i < NUM_FRAMES; i++) {
         if (all_frames[i].valid != 1) {  // found free frame
             // copy lines into frame storage
@@ -101,26 +152,36 @@ int add_frame(char *lines[], char* prog_name, int page_number, int* frame_number
 					program_storage[i * FRAME_SIZE + j] = NULL; // pad remaining slots in case end of file
 				}
 			}
-
 			// Create or update frame struct
             if (all_frames[i].valid == -1) {  // frame has not been initialized
-                all_frames[i] = create_frame(prog_name, page_number);
+                all_frames[i] = create_frame(prog_name, page_number, page_table);
             } else {  // frame already exists -> update fields
                 all_frames[i].valid = 1;
                 all_frames[i].prog_name = strdup(prog_name);
                 all_frames[i].page_number = page_number;
+				all_frames[i].page_table = page_table;
             }
-
-            *frame_number_out = i;  // output the frame number where the page was added
+			page_table[page_number] = i;  // update page table with frame number where page is stored
             return 0;
         }
     }
-    return 1; // memory full IMPLEMENT REPLACING POLICY LATER
+	// memory is full, need to evict a page to make space
+	int victime_frame = replace_page(prog_name, page_number, page_table);
+	// add to storage after evicting
+	for (int j = 0; j < FRAME_SIZE; j++) {
+		if (lines[j] != NULL) {
+			program_storage[victime_frame * FRAME_SIZE + j] = strdup(lines[j]);
+		} else {
+			program_storage[victime_frame * FRAME_SIZE + j] = NULL; // pad remaining slots in case end of file
+		}
+	}
+    return 1;
 }
 
 
-// Function to load a single page from a file into memory
-int load_next_page(char* filename, int page_number, int* frame_number_out){
+// Function to load a single page from a file into memory.
+// returns 1 if error with file, 0 if successful (had space / evicted page to make space)
+int load_page(char* filename, int page_number, int* page_table) {
 	// Open file & make sure it exists
 	FILE* f = fopen(filename, "r");
 	if (f == NULL) return 1;
@@ -149,11 +210,7 @@ int load_next_page(char* filename, int page_number, int* frame_number_out){
 	fclose(f);
 
 	// Add lines to memory
-	int result = add_frame(lines, filename, page_number, frame_number_out);  // if successful, result = frame number
-	if (result == 1){
-		fprintf(stderr, "Memory is full; cannot load the next page.\n");
-		return 1;
-	}
+	add_frame(lines, filename, page_number, page_table);
 	
 	return 0;
 } 
@@ -176,10 +233,8 @@ int load_init(char* filename, int* length_out, int* page_table){
     fclose(f);
 
 	// Load first 2 pages (or fewer if program is shorter) into memory
-	int frame_number;
 	for (int page_number = 0; page_number < 2 && page_number < total_pages; page_number++) {
-		if (load_next_page(filename, page_number, &frame_number) != 0) return 1;
-		page_table[page_number] = frame_number;  // store frame number in page table
+		if (load_page(filename, page_number, page_table) != 0) return 1;
 	}
 
 	return 0;

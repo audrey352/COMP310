@@ -11,10 +11,9 @@ Complete:
 1.2.2 - Demand Paging
 	Shell Memory Size
 	Code Loading
+	Page Faults
 
 To-Do: 
-1.2.2 - Demand Paging
-	+Page Faults
 1.2.3 - Page Replacement Policy
 Testcases
 Video (1.2.2)
@@ -22,14 +21,14 @@ Video (1.2.2)
 
 Schedule:
 Alexia: ??
-Audrey: tuesday (10-2 & after 6pm), thursday (10-2pm & after 7pm)
+Audrey: thursday (10-2pm & after 7pm)
 
 Notes:
 Implemented Process Sharing: Basically, i changed the find duplicates to update an array and mark which program 
 it's a duplicate of if it if (-1) otherwise. Then in the program start and length, if it's a duplicate, it just
 copies those values instead of loading anything.
 
-debugging 1.2.1: 
+debugging 1.2.1 (lowkey ignore these bc everything changed again for 1.2.2): 
 - added comments and made the distinction bw page number and frame number clearer in scheduler & shell memory.
 	we have page table = [page0, page1, page2, ...] where each entry is the frame number in memory for that page.
 - Think about our program as being N lines split into pages, and the program counter tells us how far along we are. 
@@ -61,7 +60,8 @@ code loading + pauge faults
 	this keeps track of the page it contains and the program name.
 - the exec function now only calls load_init which loads the first 2 pages. then the scheduler is in charge of loading in new pages
 	if they aren't in memory. it updates the page table entries (shared for duplicate processes)
-- the page replacement currently happens in the function add_frame in shellmemory.c 
-
+- the page replacement currently happens in the function replace_page in shellmemory.c where I just pick a random frame number
+	I'm guessing for 1.2.3 we'll have an array or something to keep track of LRU so then we just need another helper function that 
+	gets the LRU frame number
 
 Note: will need to make sure we cleanup pages + page tables + etc properly when quitting

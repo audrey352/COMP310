@@ -16,8 +16,9 @@ struct var_memory_struct {  // struct for variable memory
 
 struct Frame {  // struct for metadata of each frame in program storage
     int valid;  // 0 = free, 1 = used, -1 = uninitialized
-    char* prog_name;  // name of the program that owns this frame (used to open the correct file)
     int page_number;  // which page is stored in this frame? 
+    char* prog_name;  // name of the program that owns this frame (used to open the correct file)
+    int *page_table;   // pointer to PCB's page table
 };
 
 extern struct Frame all_frames[NUM_FRAMES];
@@ -30,9 +31,10 @@ void mem_set_value(char *var, char *value);
 
 int add_line(char *line);
 char* get_line(int index);
-struct Frame create_frame(char* prog_name, int page_number);
-int add_frame(char *lines[], char* prog_name, int page_number, int* frame_number_out);
-int load_next_page(char* filename, int page_number, int* frame_number_out);
+struct Frame create_frame(char* prog_name, int page_number, int* page_table);
+int add_frame(char *lines[], char* prog_name, int page_number, int* page_table);
+int replace_page(char* new_prog_name, int new_page_number, int* new_page_table);
+int load_page(char* filename, int page_number, int* page_table);
 int load_init(char* filename, int* length_out, int* page_table);
 
 
