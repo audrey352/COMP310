@@ -512,7 +512,12 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 	char* policy;
     int num_programs = args_size - 1;
 	policy = args[num_programs];
-    
+
+    // Get context for the scheduler
+    SchedulerContext* ctx = get_scheduler_context(policy);
+    if (ctx == NULL) return 1;  // invalid policy
+
+    // allocate space to store program lengths
 	int prog_lengths[num_programs];
     memset(prog_lengths, -1, sizeof(prog_lengths)); //intialize to -1	
 
@@ -565,10 +570,10 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         PCB *pcb = create_pcb(prog_lengths[i], prog_page_tables[i]);
         if (mt_flag) {
             pthread_mutex_lock(&ready_queue_lock);
-            enqueue_func(pcb);
+            ctx->enqueue_func(pcb);
             pthread_mutex_unlock(&ready_queue_lock);
         } else {
-            enqueue_func(pcb);
+            ctx->enqueue_func(pcb);
         }
     }
     // printf("Finished creating PCBs and adding to ready queue.\n");
@@ -593,10 +598,6 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
             }
         }
     }
-
-    // Get context for the scheduler
-    SchedulerContext* ctx = get_scheduler_context(policy);
-    if (!ctx) return 1;
 
     // Run the correct scheduler with appropriate context
     if (mt_flag) {

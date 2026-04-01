@@ -1,6 +1,4 @@
 #include "policy.h"
-#include <string.h>
-#include <stdio.h>
 
 
 SchedulerContext* get_scheduler_context(const char* policy_name) {
@@ -22,7 +20,7 @@ SchedulerContext* get_scheduler_context(const char* policy_name) {
 		enqueue_func = enqueue_tail;
         preemptive = 1;
         time_slice = 2;
-    } else if (strcmp(polpolicy_nameicy, "RR30") == 0){
+    } else if (strcmp(policy_name, "RR30") == 0){
         enqueue_func = enqueue_tail;
         preemptive = 1;
         time_slice = 30;
@@ -33,7 +31,7 @@ SchedulerContext* get_scheduler_context(const char* policy_name) {
         aging_policy = true;
 	} else {
  		fprintf(stderr, "Invalid Policy: %s, \n", policy_name);
-        return 1; 		
+        return NULL; 		
 	}
 
 

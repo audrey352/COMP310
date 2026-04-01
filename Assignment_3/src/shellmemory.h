@@ -21,8 +21,8 @@ struct Frame {  // struct for metadata of each frame in program storage
     int page_number;  // which page is stored in this frame? -> single bc specific lines in code
 };
 
+extern struct Frame all_frames[NUM_FRAMES];
 extern char *program_storage[FRAME_STORE_SIZE];
-struct Frame all_frames[NUM_FRAMES];
 extern int next_pid;
 
 void mem_init();

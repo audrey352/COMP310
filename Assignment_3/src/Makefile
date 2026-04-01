@@ -3,10 +3,10 @@ CFLAGS = -D FRAME_STORE_SIZE=$(framesize) -D VAR_MEM_SIZE=$(varmemsize)
 FMT=indent
 
 mysh: shell.c interpreter.c shellmemory.c readyqueue.c scheduler.c
-	$(CC) $(CFLAGS) -c shell.c interpreter.c shellmemory.c readyqueue.c scheduler.c
-	$(CC) $(CFLAGS) -o mysh shell.o interpreter.o shellmemory.o readyqueue.o scheduler.o -lpthread
+	$(CC) $(CFLAGS) -c shell.c interpreter.c shellmemory.c readyqueue.c scheduler.c policy.c
+	$(CC) $(CFLAGS) -o mysh shell.o interpreter.o shellmemory.o readyqueue.o scheduler.o policy.o -lpthread
 
-style: shell.c shell.h interpreter.c interpreter.h shellmemory.c shellmemory.h readyqueue.c readyqueue.h scheduler.c scheduler.h
+style: shell.c shell.h interpreter.c interpreter.h shellmemory.c shellmemory.h readyqueue.c readyqueue.h scheduler.c scheduler.h policy.c policy.h
 	$(FMT) $?
 
 clean: 

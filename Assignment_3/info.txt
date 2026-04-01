@@ -47,7 +47,13 @@ The seg faults were coming from not tracking the pages properly when loading the
 Shell Memory Size: 
 - assignment uses the variable FRAMESIZE to refer to the total number of lines in the program storage. 
 	in our code we are using this to define the number of lines in a single frame!! (FRAME_STORE_SIZE is our total number of lines)
-- 
+
+code loading + pauge faults
+- changed loading functions in shellmemory to deal with pages instead and not load all the program at once
+	we now have an initial function to load the first pages right after opening the file, 
+	and a function that loads a specific page to a frame (which we can use to swap out pages)
+	the assumption for duplicate files is that we load the pages in order. so either the page is already in memory -- added by other copy of the program
+	or its not in memory and we need to load the next page (so next 3 lines starting where the file pointer is)
 
 
 
