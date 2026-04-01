@@ -416,11 +416,11 @@ int source(char *script) {
     memset(page_table, -1, sizeof(int) * NUM_FRAMES);
 
     // Load script into program storage
-    if (load_program(script, &program_length, page_table) != 0)
+    if (load_init(script, &program_length, page_table) != 0)
         return badcommandFileDoesNotExist();
 
     // Create PCB for new program and add to ready-queue
-    PCB *pcb = create_pcb(program_length, page_table);  // create PCB with page table
+    PCB *pcb = create_pcb(script, program_length, page_table);  // create PCB with page table
     enqueue_tail(pcb);
 
     // Run ready queue until empty (using FCFS scheduling)
@@ -550,24 +550,23 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         // printf("\nLoading program: %s \n", args[i]);
         // check if program already exists in memory
         int p = duplicates[i];  // -1 if no duplicate, otherwise index of first occurrence of the same file
-        if (p != -1 && duplicate_flag){
-            //if it does, just copy where the code is (program start is given by page table!)
+
+        if (p != -1 && duplicate_flag){  // if it exists, just copy the info
             prog_lengths[i] = prog_lengths[p];
-            prog_page_tables[i] = prog_page_tables[p];
-        }
-        else{  // load program in memory
+            prog_page_tables[i] = prog_page_tables[p];  // shared page table!
+        } else {  // load program in memory
             int err_code; 
-            if ((err_code = load_program(args[i], &prog_lengths[i], prog_page_tables[i])) != 0) {
+            if ((err_code = load_init(args[i], &prog_lengths[i], prog_page_tables[i])) != 0) {
                 printf("Error loading program %s: file doesn't exist or program too long to fit in memory\n", args[i]);
-                return err_code;  // stop if any program doesn't exist or memory is full
+                return err_code;  // stop if a program doesn't exist or memory is full
             }
         }
     }
 
     // printf("\nCreating PCBs and adding to ready queue...\n");
     // Create & enqueue all PCBs (only if all programs loaded successfully)
-    for (int i = 0; i < (num_programs); i++){
-        PCB *pcb = create_pcb(prog_lengths[i], prog_page_tables[i]);
+    for (int i = 0; i < num_programs; i++){
+        PCB *pcb = create_pcb(args[i], prog_lengths[i], prog_page_tables[i]);
         if (mt_flag) {
             pthread_mutex_lock(&ready_queue_lock);
             ctx->enqueue_func(pcb);
@@ -578,26 +577,26 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     }
     // printf("Finished creating PCBs and adding to ready queue.\n");
 
-    // If # is enabled, load PCB to ready queue at head. 
-    if (batch_flag) {
-        int program_length;
-        int *page_table = malloc(sizeof(int) * NUM_FRAMES);
-        memset(page_table, -1, sizeof(int) * NUM_FRAMES);
+    // If # is enabled, load PCB to ready queue at head. -- NOT NEEDED FOR THIS ASSIGNMENT, not updated for paging :(
+    // if (batch_flag) {
+    //     int program_length;
+    //     int *page_table = malloc(sizeof(int) * NUM_FRAMES);
+    //     memset(page_table, -1, sizeof(int) * NUM_FRAMES);
 
-        int code = load_program_file(stdin, &program_length, page_table);  // prog0 = the rest of the script after the exec line
-        if (code == 0){
-            PCB* batch_pcb = create_pcb(program_length, page_table);  // we can just reuse the page table from the first program since it's all stored in the same place in memory
-            if (batch_pcb != NULL){  // put batch program at front of queue
-                if (mt_flag) {
-                    pthread_mutex_lock(&ready_queue_lock);
-                    enqueue_head(batch_pcb);
-                    pthread_mutex_unlock(&ready_queue_lock);
-                } else {
-                    enqueue_head(batch_pcb);
-                }
-            }
-        }
-    }
+    //     int code = load_program_file(stdin, &program_length, page_table);  // prog0 = the rest of the script after the exec line
+    //     if (code == 0){
+    //         PCB* batch_pcb = create_pcb("batch_program", program_length, page_table);  // we can just reuse the page table from the first program since it's all stored in the same place in memory
+    //         if (batch_pcb != NULL){  // put batch program at front of queue
+    //             if (mt_flag) {
+    //                 pthread_mutex_lock(&ready_queue_lock);
+    //                 enqueue_head(batch_pcb);
+    //                 pthread_mutex_unlock(&ready_queue_lock);
+    //             } else {
+    //                 enqueue_head(batch_pcb);
+    //             }
+    //         }
+    //     }
+    // }
 
     // Run the correct scheduler with appropriate context
     if (mt_flag) {

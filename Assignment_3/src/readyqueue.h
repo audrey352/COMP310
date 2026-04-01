@@ -3,7 +3,7 @@
 
 typedef struct pcb {
 	int PID;
-	int start;  // index of the first instruction of the program in program storage
+	char* prog_name;  // name of the program
 	int program_counter;  // index of the next instruction to execute in program storage
 	int program_length;  // number of lines in the program
     struct pcb* next;  // pointer to the next PCB in the ready queue
@@ -19,7 +19,7 @@ typedef struct ready_queue {
 
 extern ReadyQueue ready_queue;  // global ready queue
 
-PCB* create_pcb(int program_length, int* page_table);
+PCB* create_pcb(char* prog_name, int program_length, int* page_table);
 int pcb_cleanup(PCB *pcb);
 int update_job_score(PCB* pcb);
 

@@ -16,9 +16,8 @@ struct var_memory_struct {  // struct for variable memory
 
 struct Frame {  // struct for metadata of each frame in program storage
     int valid;  // 0 = free, 1 = used, -1 = uninitialized
-    int num_pids;  // how many processes are sharing this frame (in case of duplicates)
-    int process_pid[3];  // which process does the page in this frame belong to? can be up to 3 in case of duplicates
-    int page_number;  // which page is stored in this frame? -> single bc specific lines in code
+    char* prog_name;  // name of the program that owns this frame (used to open the correct file)
+    int page_number;  // which page is stored in this frame? 
 };
 
 extern struct Frame all_frames[NUM_FRAMES];
@@ -31,10 +30,12 @@ void mem_set_value(char *var, char *value);
 
 int add_line(char *line);
 char* get_line(int index);
-struct Frame create_frame(int pids[], int num_pids, int page_number);
-int add_frame(char *lines[], int pid, int page_number, int* frame_number_out);
-int load_next_page(FILE* f, int pid, int page_number, int* frame_number_out);
-int load_init(FILE* f, int pid, int* length_out, int* page_table);
+struct Frame create_frame(char* prog_name, int page_number);
+int add_frame(char *lines[], char* prog_name, int page_number, int* frame_number_out);
+int load_next_page(char* filename, int page_number, int* frame_number_out);
+int load_init(char* filename, int* length_out, int* page_table);
+
+
 // int clean_frames(int length, int* page_table);
 // int load_program(char *script, int* length_out, int* page_table);
 // int load_program_file(FILE *fp, int* length_out, int* page_table);

@@ -7,10 +7,11 @@
 #include "shellmemory.h"
 
 // Function to initialize a new PCB
-PCB* create_pcb(int program_length, int* page_table) {
+PCB* create_pcb(char* prog_name, int program_length, int* page_table) {
     PCB *pcb = malloc(sizeof(PCB));
+    pcb->prog_name = strdup(prog_name);
     pcb->PID = next_pid++;
-    pcb->program_counter = 0;  // pc gives us how far along the program (pages) we are, start at index 0
+    pcb->program_counter = 0;  // pc gives us how far along the program we are, start at line 0
     pcb->program_length = program_length;
     pcb->next = NULL;
     pcb->job_score = program_length;
