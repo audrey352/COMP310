@@ -14,6 +14,8 @@ char *program_storage[FRAME_STORE_SIZE];  // this is our frame store (frame0 = l
 struct Frame all_frames[NUM_FRAMES] = {-1};  // array containing all frame structs (keeps track of which process and page is stored in each frame)
 int next_pid = 1;  // global counter for assigning unique PIDs (used when creating pcbs)
 
+//Initialize the global clock
+long global_clock = 0;
 
 // Helper functions
 int match(char *model, char *var) {
@@ -85,6 +87,7 @@ struct Frame create_frame(char* prog_name, int page_number, int* page_table) {
 	frame.prog_name = strdup(prog_name);  // store program name
 	frame.page_number = page_number;  // store new page number
 	frame.page_table = page_table;  // store pointer to PCB's page table
+	frame.time_stamp = 0;
 	return frame;
 }
 

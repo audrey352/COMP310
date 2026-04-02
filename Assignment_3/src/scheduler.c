@@ -43,6 +43,8 @@ static int handle_page_fault(PCB *pcb, int page_number) {
 // Execute the line of the program given by it's program counter
 // this function assumes the page is already in memory (should check before calling)
 static void execute_current_line(PCB *pcb) {
+    global_clock++;
+    //printf("Global clock incremented at: %ld \n", global_clock);
     int pc = pcb->program_counter;
     int page = pc / FRAME_SIZE;  // page number in the program
     int offset = pc % FRAME_SIZE;  // line within page
@@ -54,6 +56,8 @@ static void execute_current_line(PCB *pcb) {
         parseInput(line);  // execute instruction
     }
     pcb->program_counter++;  // update program counter to next line
+    all_frames[frame].time_stamp = global_clock; //update the time for when the frame was last accesed
+    //printf("Frame timestamp updated to: %ld \n", all_frames[frame].time_stamp);
 }
 
 // Run the pcb until a page fault or we reach the max number of lines to run

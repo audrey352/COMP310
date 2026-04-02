@@ -9,6 +9,8 @@
 #define NUM_FRAMES (FRAME_STORE_SIZE / FRAME_SIZE)
 #define MAX_LINE_LENGTH 1000  // max number of characters in a line
 
+extern long global_clock; //keeps track of how long the program has been running
+
 struct var_memory_struct {  // struct for variable memory
     char *var;
     char *value;
@@ -19,6 +21,7 @@ struct Frame {  // struct for metadata of each frame in program storage
     int page_number;  // which page is stored in this frame? 
     char* prog_name;  // name of the program that owns this frame (used to open the correct file)
     int *page_table;   // pointer to PCB's page table
+    long time_stamp; //stores the last time the frame was used (0 if never)
 };
 
 extern struct Frame all_frames[NUM_FRAMES];
