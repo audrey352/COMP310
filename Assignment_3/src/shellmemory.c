@@ -108,12 +108,26 @@ void free_frame_storage(int frame_index) {
     }
 }
 
+//Helper function to find LRU page
+int find_least_recently_used(void){
+	int LRU = 0;
+	for (int i = 0; i < NUM_FRAMES; i++){
+		if (all_frames[i].time_stamp < all_frames[LRU].time_stamp){
+			LRU = i;
+		}
+	}
+	return LRU;
+}
 
 // Function to evict a page from memory and replace it with a new page
 int replace_page(char* new_prog_name, int new_page_number, int* new_page_table) {
 	// pick a victim page to evict (randomly pick a frame that is currently in use)
-	int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
+	//int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
+	//Based on evicition policy
 	
+	int victim_frame = find_least_recently_used();
+	
+
 	// print the contents of the victim page
 	printf("Victim page contents: \n\n");
 	int victim_start = victim_frame * FRAME_SIZE;
