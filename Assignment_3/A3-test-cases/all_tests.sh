@@ -82,13 +82,13 @@ while read testfile; do
 
     # ---------- normal tests ----------
     $SHELL < "$testfile" > "$outfile"
-    if diff -u "$resultfile" "$outfile" > /dev/null; then
+    if diff -Z "$resultfile" "$outfile" > /dev/null; then
         echo " PASS"
         ((PASS++))
     else
         echo " FAIL"
         echo " Diff:"
-        diff -u "$resultfile" "$outfile"
+        diff -Z "$resultfile" "$outfile"
         ((FAIL++))
     fi
 

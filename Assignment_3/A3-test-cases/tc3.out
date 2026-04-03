@@ -1,10 +1,4 @@
 Frame Store Size = 21; Variable Store Size = 10
-Found a free frame at: 0 
-Found a free frame at: 1 
-Found a free frame at: 2 
-Found a free frame at: 3 
-Found a free frame at: 4 
-Found a free frame at: 5 
 P7L1
 P7L2
 P8L1
@@ -23,22 +17,15 @@ P8L5
 P8L6
 P9L5
 P9L6
-Page fault! Found a free frame at: 6 
-
-Page fault! Finding a victim frame 
-Victim page contents: 
-
-echo P7L7
-End of victim page contents.
-Page fault! Finding a victim frame 
-Victim page contents: 
+Page fault! 
+Page fault! Victim page contents: 
 
 echo P7L1
 echo P7L2
 echo P7L3
 
 End of victim page contents.
+P7L7
 P8L7
 P8L8
-P7L7
 Bye!
