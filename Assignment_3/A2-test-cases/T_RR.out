@@ -1,4 +1,4 @@
-Shell version 1.5 created Dec 2025
+Frame Store Size = 999; Variable Store Size = 1000
 P1L1
 P1L2
 OOP2L1OO
@@ -17,5 +17,7 @@ OOP2L5OO
 OOP2L6OO
 OOOOP3L5OOOO
 OOOOP3L6OOOO
+Page fault! 
+Page fault! 
 OOP2L7OO
 Bye!

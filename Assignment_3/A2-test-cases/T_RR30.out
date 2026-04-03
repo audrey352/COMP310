@@ -1,331 +1,541 @@
-Shell version 1.5 created Dec 2025
+Frame Store Size = 999; Variable Store Size = 1000
 X
 X
 X
 X
 X
 X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
+Page fault! 
+Page fault! 
 YY
 YY
 YY
 YY
 YY
 YY
-YY
-YY
-YY
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
 ZZZ
 ZZZ
 ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
+Page fault! 
+Page fault! 
 X
 X
 X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
+Page fault! 
+Page fault! 
 YY
 YY
 YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-YY
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-ZZZ
-X
-X
-X
-X
+Page fault! 
+Page fault! 
 X
 X
 X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
-X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
 X
 X
 X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
-X
+Page fault! 
+Page fault! 
 X
 X
 X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
 X
 X
 X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
 X
 X
 X
-YY
-YY
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
+ZZZ
+ZZZ
+ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
 YY
 YY
 YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+X
+X
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+X
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+YY
+YY
+YY
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
+YY
+YY
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ
+Page fault! 
+Page fault! 
 ZZZ
 ZZZ
 ZZZ

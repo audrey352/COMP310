@@ -129,11 +129,11 @@ int find_least_recently_used(void){
 // Function to evict a page from memory and replace it with a new page
 int replace_page(char* new_prog_name, int new_page_number, int* new_page_table) {
 	// pick a victim page to evict (randomly pick a frame that is currently in use)
-	int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
+	//int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
 	//Based on evicition policy
 	
-	//int victim_frame = find_least_recently_used();
-	
+	int victim_frame = find_least_recently_used();
+	//printf("Choose page: %d \n", victim_frame);	
 
 	// print the contents of the victim page
 	printf("Victim page contents: \n\n");
@@ -157,6 +157,7 @@ int replace_page(char* new_prog_name, int new_page_number, int* new_page_table) 
 	all_frames[victim_frame].prog_name = strdup(new_prog_name);
 	all_frames[victim_frame].page_number = new_page_number;
 	all_frames[victim_frame].page_table = new_page_table;
+	all_frames[victim_frame].time_stamp = global_clock;
 
 	return victim_frame;
 }
@@ -171,7 +172,7 @@ int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) 
 	//printf("Frame at: %d is %d \n", i, all_frames[i].valid);
         if (all_frames[i].valid != 1) {  // found free frame
             // copy lines into frame storage
-	    //printf("Found a free frame at: %d \n", i);
+	    printf("Found a free frame at: %d \n", i);
 			for (int j = 0; j < FRAME_SIZE; j++) {
 				if (lines[j] != NULL) {
 					program_storage[i * FRAME_SIZE + j] = strdup(lines[j]);
@@ -186,12 +187,14 @@ int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) 
                 all_frames[i].valid = 1;
                 all_frames[i].prog_name = strdup(prog_name);
                 all_frames[i].page_number = page_number;
-				all_frames[i].page_table = page_table;
+		all_frames[i].time_stamp = global_clock;
+		all_frames[i].page_table = page_table;
             }
-			page_table[page_number] = i;  // update page table with frame number where page is stored
-            return 0;
+	page_table[page_number] = i;  // update page table with frame number where page is stored    
+       	return 0;
         }
     }
+	printf("Finding a victim frame \n");
 	// memory is full, need to evict a page to make space
 	int victime_frame = replace_page(prog_name, page_number, page_table);
 	// add to storage after evicting

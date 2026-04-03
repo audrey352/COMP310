@@ -23,7 +23,7 @@ static bool pool_initialized = false;
 // Returns 1 if page is in memory, 0 if not. Sets *frame_out if in memory
 static int check_page_in_memory(PCB *pcb, int page_number, int *frame_out) {
     int frame = pcb->page_table[page_number];  // frame number
-    //printf("Found frame at: %d \n", frame);
+   // printf("Found frame at: %d \n", frame);
     if (frame == -1) return 0;  // not in memory
     *frame_out = frame;  // set frame_out if in memory
     return 1;
@@ -32,7 +32,7 @@ static int check_page_in_memory(PCB *pcb, int page_number, int *frame_out) {
 // Loads the page into memory, updates PCB page table
 static int handle_page_fault(PCB *pcb, int page_number) {
     printf("Page fault! ");
-    printf("\n \n Page Faulted at time: %ld  \n \n", global_clock);
+    //printf("\n \n Page Faulted at time: %ld  \n \n", global_clock);
     // load page into memory (will evict a page if memory is full)
     int frame;
     if (load_page(pcb->prog_name, page_number, pcb->page_table) != 0) {
@@ -70,11 +70,11 @@ static int run_pcb(PCB *pcb, int max_num_lines) {
     while (pcb->program_counter < pcb->program_length && lines_run < max_num_lines) {
         int pc = pcb->program_counter;
         int page = pc / FRAME_SIZE;  // page number in the program
+	//printf("Looking for page: %d \n", page);
         int frame; 
-	//printf("Looking for page: %d \n", page);	
         if (check_page_in_memory(pcb, page, &frame) == 0) {  // page not in memory -> page fault
             int res = handle_page_fault(pcb, page);
-            if (handle_page_fault(pcb, page) != 0) return -1;  // error with file
+            if (res != 0) return -1;  // error with file
             return 1;  // stop running this program due to page fault (need to put pcb back in queue)
         }
 

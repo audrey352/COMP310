@@ -1,4 +1,4 @@
-Shell version 1.5 created Dec 2025
+Frame Store Size = 999; Variable Store Size = 1000
 f2is3lines
 f2is3lines
 f1is5lines
@@ -10,6 +10,8 @@ f3is7lines
 f3is7lines
 f3is7lines
 f3is7lines
+Page fault! 
+Page fault! 
 f3is7lines
 f2is3lines
 f2is3lines
@@ -22,6 +24,8 @@ f3is7lines
 f3is7lines
 f3is7lines
 f3is7lines
+Page fault! 
+Page fault! 
 f3is7lines
 f2is3lines
 f2is3lines
@@ -34,5 +38,7 @@ f3is7lines
 f3is7lines
 f3is7lines
 f3is7lines
+Page fault! 
+Page fault! 
 f3is7lines
 Bye!
