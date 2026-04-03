@@ -11,7 +11,11 @@ struct var_memory_struct shellmemory[VAR_MEM_SIZE];  // this is our variables st
 // Initialize program storage (single array to store all frames)
 // ** FRAME_STORE_SIZE is the total number of lines in prog storage. it's defined in the makefile!
 char *program_storage[FRAME_STORE_SIZE];  // this is our frame store (frame0 = lines 0-FRAME_SIZE, etc)
-struct Frame all_frames[NUM_FRAMES] = {-1};  // array containing all frame structs (keeps track of which process and page is stored in each frame)
+
+//Frames keep track of all the frame in storage
+struct Frame all_frames[NUM_FRAMES];
+//Initialized all frames to -1 for frame not initialized
+
 int next_pid = 1;  // global counter for assigning unique PIDs (used when creating pcbs)
 
 //Initialize the global clock
@@ -37,6 +41,9 @@ void mem_init() {
         shellmemory[i].var = "none";
         shellmemory[i].value = "none";
     }
+    for (i = 0 ; i < NUM_FRAMES ; i++){
+	    all_frames[i].valid = -1;
+	   }
 }
 
 // Set key value pair
@@ -122,10 +129,10 @@ int find_least_recently_used(void){
 // Function to evict a page from memory and replace it with a new page
 int replace_page(char* new_prog_name, int new_page_number, int* new_page_table) {
 	// pick a victim page to evict (randomly pick a frame that is currently in use)
-	//int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
+	int victim_frame = rand() % NUM_FRAMES;  // NEED TO CHANGE BASED ON EVICTION POLICY
 	//Based on evicition policy
 	
-	int victim_frame = find_least_recently_used();
+	//int victim_frame = find_least_recently_used();
 	
 
 	// print the contents of the victim page
@@ -159,9 +166,12 @@ int replace_page(char* new_prog_name, int new_page_number, int* new_page_table) 
 // Also updates page table with the new frame number where the page is stored in memory.
 // returns 0 if found free space, 1 if memory was full and a page had to be evicted to make space.
 int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) {
-    for (int i = 0; i < NUM_FRAMES; i++) {
+	//printf("Number of frames is: %d \n", NUM_FRAMES);   
+	for (int i = 0; i < NUM_FRAMES; i++) {
+	//printf("Frame at: %d is %d \n", i, all_frames[i].valid);
         if (all_frames[i].valid != 1) {  // found free frame
             // copy lines into frame storage
+	    //printf("Found a free frame at: %d \n", i);
 			for (int j = 0; j < FRAME_SIZE; j++) {
 				if (lines[j] != NULL) {
 					program_storage[i * FRAME_SIZE + j] = strdup(lines[j]);
@@ -252,6 +262,7 @@ int load_init(char* filename, int* length_out, int* page_table){
 	// Load first 2 pages (or fewer if program is shorter) into memory
 	for (int page_number = 0; page_number < 2 && page_number < total_pages; page_number++) {
 		if (load_page(filename, page_number, page_table) != 0) return 1;
+		//printf("Loaded page %d to %d \n", page_number, page_table[page_number]);
 	}
 
 	return 0;

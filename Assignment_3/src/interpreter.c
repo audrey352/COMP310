@@ -547,7 +547,7 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
 
     // Load all input programs into memory
     for (int i = 0; i < num_programs; i++){
-        // printf("\nLoading program: %s \n", args[i]);
+        //printf("\nLoading program: %s \n", args[i]);
         // check if program already exists in memory
         int p = duplicates[i];  // -1 if no duplicate, otherwise index of first occurrence of the same file
 
@@ -561,13 +561,23 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
                 return err_code;  // stop if a program doesn't exist or memory is full
             }
         }
+	//printf("Done loading program: %s \n", args[i]);
     }
 
     // printf("\nCreating PCBs and adding to ready queue...\n");
     // Create & enqueue all PCBs (only if all programs loaded successfully)
     for (int i = 0; i < num_programs; i++){
         PCB *pcb = create_pcb(args[i], prog_lengths[i], prog_page_tables[i]);
-        if (mt_flag) {
+        
+	//printf("\n \ncreated pcb: %d  with: \n", pcb->PID);
+	int* page_table = pcb->page_table;
+	for (int i = 0 ; i < NUM_FRAMES ; i++){
+		//printf("Frame %d stored at %d in memory \n", i, page_table[i]);
+	}
+	//printf("\n\n");
+	
+	
+	if (mt_flag) {
             pthread_mutex_lock(&ready_queue_lock);
             ctx->enqueue_func(pcb);
             pthread_mutex_unlock(&ready_queue_lock);
@@ -575,7 +585,9 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
             ctx->enqueue_func(pcb);
         }
     }
-    // printf("Finished creating PCBs and adding to ready queue.\n");
+    //printf("Finished creating PCBs and adding to ready queue.\n");
+
+
 
     // If # is enabled, load PCB to ready queue at head. -- NOT NEEDED FOR THIS ASSIGNMENT, not updated for paging :(
     // if (batch_flag) {
