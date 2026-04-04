@@ -412,8 +412,26 @@ int cd(char *path) {
 int source(char *script) {
     // Initialize arrays
     int program_length;
-    int *page_table = malloc(sizeof(int) * NUM_FRAMES);
-    memset(page_table, -1, sizeof(int) * NUM_FRAMES);
+ 
+    //Figure out how many pages we'll need
+    FILE* f = fopen(script, "r");
+    if (f == NULL) return 1;
+
+    int total_lines = 0;
+    char buffer[MAX_LINE_LENGTH];
+    while (fgets(buffer, MAX_LINE_LENGTH, f) != NULL) {
+        total_lines++;
+    }
+    int total_pages = (total_lines + FRAME_SIZE - 1) / FRAME_SIZE;  // round up
+    fclose(f);
+
+
+    //Initialize page table based on how many pages are needed
+    int *page_table = malloc(sizeof(int) * total_pages);
+    //memset(page_table, -1, sizeof(int) * NUM_FRAMES);
+	for (int i = 0; i < total_pages ; i ++ ) {
+		page_table[i] = -1;
+	}
 
     // Load script into program storage
     if (load_init(script, &program_length, page_table) != 0)
@@ -421,15 +439,21 @@ int source(char *script) {
 
     // Create PCB for new program and add to ready-queue
     PCB *pcb = create_pcb(script, program_length, page_table);  // create PCB with page table
+   
+    SchedulerContext* ctx = get_scheduler_context("RR");
+    
     enqueue_tail(pcb);
 
+    return scheduler_single(ctx);
+
     // Run ready queue until empty (using FCFS scheduling)
+    /*
     while (ready_queue.head != NULL) {
         // Get program to run
         PCB *current_pcb = dequeue_head(); // remove head from queue
         int* page_table = current_pcb->page_table;
         int end_of_program = current_pcb->program_length;
-
+	
         // Run full program
         while (current_pcb->program_counter < end_of_program) {
             // get program counter and convert that to an actual line in memory storage using the page table
@@ -448,6 +472,7 @@ int source(char *script) {
         }
     }
     return 0;
+    */
 }
 
 
@@ -570,10 +595,10 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
         PCB *pcb = create_pcb(args[i], prog_lengths[i], prog_page_tables[i]);
         
 	//printf("\n \ncreated pcb: %d  with: \n", pcb->PID);
-	int* page_table = pcb->page_table;
-	for (int i = 0 ; i < NUM_FRAMES ; i++){
+	//int* page_table = pcb->page_table;
+	//for (int i = 0 ; i < NUM_FRAMES ; i++){
 		//printf("Frame %d stored at %d in memory \n", i, page_table[i]);
-	}
+	//}
 	//printf("\n\n");
 	
 	

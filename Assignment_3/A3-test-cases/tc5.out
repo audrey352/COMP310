@@ -5,6 +5,13 @@ P8L3
 P8L4
 P8L5
 P8L6
-P8L1
-P8L2
+Page fault! Victim page contents: 
+
+echo P8L1
+echo P8L2
+echo P8L3
+
+End of victim page contents.
+P8L7
+P8L8
 Bye!

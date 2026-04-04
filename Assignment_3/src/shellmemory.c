@@ -94,7 +94,7 @@ struct Frame create_frame(char* prog_name, int page_number, int* page_table) {
 	frame.prog_name = strdup(prog_name);  // store program name
 	frame.page_number = page_number;  // store new page number
 	frame.page_table = page_table;  // store pointer to PCB's page table
-	frame.time_stamp = 0;
+	frame.time_stamp = global_clock;
 	return frame;
 }
 
@@ -172,7 +172,7 @@ int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) 
 	//printf("Frame at: %d is %d \n", i, all_frames[i].valid);
         if (all_frames[i].valid != 1) {  // found free frame
             // copy lines into frame storage
-	    printf("Found a free frame at: %d \n", i);
+	    //printf("Found a free frame at: %d \n", i);
 			for (int j = 0; j < FRAME_SIZE; j++) {
 				if (lines[j] != NULL) {
 					program_storage[i * FRAME_SIZE + j] = strdup(lines[j]);
@@ -182,6 +182,7 @@ int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) 
 			}
 			// Create or update frame struct
             if (all_frames[i].valid == -1) {  // frame has not been initialized
+		//printf("Creating new frame \n");
                 all_frames[i] = create_frame(prog_name, page_number, page_table);
             } else {  // frame already exists -> update fields
                 all_frames[i].valid = 1;
@@ -194,7 +195,8 @@ int add_frame(char *lines[], char* prog_name, int page_number, int* page_table) 
        	return 0;
         }
     }
-	printf("Finding a victim frame \n");
+	//printf("Finding a victim frame \n");
+	
 	// memory is full, need to evict a page to make space
 	int victime_frame = replace_page(prog_name, page_number, page_table);
 	// add to storage after evicting
