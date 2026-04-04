@@ -22,25 +22,15 @@ static bool pool_initialized = false;
 // Helper functions
 // Returns 1 if page is in memory, 0 if not. Sets *frame_out if in memory
 static int check_page_in_memory(PCB *pcb, int page_number, int *frame_out) {
-	/*printf("\n Page table contains: \n");
-	int* page_table = pcb->page_table;
-	for (int i = 0; i < 3 ; i++){
-		printf("Entry %d: %d \n", i, page_table[i]);
-	}
-
-	printf("NUM_FRAMES=%d \n", NUM_FRAMES);
-	*/
-    int frame = pcb->page_table[page_number];  // frame number
-    //printf("pcb->page_table[%d]: %d \n", page_number, pcb->page_table[page_number]);
-    if (frame == -1) return 0;  // not in memory
+    int frame = pcb->page_table[page_number];  // frame number where page is stored in memory, or -1 if not in memory
+    if (frame == -1) return 1;  // not in memory
     *frame_out = frame;  // set frame_out if in memory
-    return 1;
+    return 0;
 }
 
 // Loads the page into memory, updates PCB page table
 static int handle_page_fault(PCB *pcb, int page_number) {
     printf("Page fault! ");
-    //printf("\n \n Page Faulted at time: %ld  \n \n", global_clock);
     // load page into memory (will evict a page if memory is full)
     int frame;
     if (load_page(pcb->prog_name, page_number, pcb->page_table) != 0) {
@@ -54,7 +44,6 @@ static int handle_page_fault(PCB *pcb, int page_number) {
 // this function assumes the page is already in memory (should check before calling)
 static void execute_current_line(PCB *pcb) {
     global_clock++;
-    //printf("Global clock incremented at: %ld \n", global_clock);
     int pc = pcb->program_counter;
     int page = pc / FRAME_SIZE;  // page number in the program
     int offset = pc % FRAME_SIZE;  // line within page
@@ -67,20 +56,19 @@ static void execute_current_line(PCB *pcb) {
     }
     pcb->program_counter++;  // update program counter to next line
     all_frames[frame].time_stamp = global_clock; //update the time for when the frame was last accesed
-    //printf("Frame timestamp updated to: %ld \n", all_frames[frame].time_stamp);
 }
 
 // Run the pcb until a page fault or we reach the max number of lines to run
 // for non-preemptuve, max_mun_lines is the program length, for preemptive it's the time slice
 static int run_pcb(PCB *pcb, int max_num_lines) {
     int lines_run = 0;  // to track how many lines have been executed in this time slice
-	//printf("Running pcb: %d \n", pcb->PID);
+	
     while (pcb->program_counter < pcb->program_length && lines_run < max_num_lines) {
         int pc = pcb->program_counter;
         int page = pc / FRAME_SIZE;  // page number in the program
-	//printf("Looking for page: %d \n", page);
         int frame; 
-        if (check_page_in_memory(pcb, page, &frame) == 0) {  // page not in memory -> page fault
+
+        if (check_page_in_memory(pcb, page, &frame) == 1) {  // page not in memory -> page fault
             int res = handle_page_fault(pcb, page);
             if (res != 0) return -1;  // error with file
             return 1;  // stop running this program due to page fault (need to put pcb back in queue)
@@ -100,12 +88,10 @@ int scheduler_single(SchedulerContext *ctx) {
         while (ready_queue.head != NULL) {
             // Get pcb to run
             PCB *current_pcb = ctx->dequeue_func(); 
-            
-	    printf("Dequeued PCB: %d \n", current_pcb->PID);
-	    
-	    int end_of_program = current_pcb->program_length;
+	        int end_of_program = current_pcb->program_length;
 
-            int result = run_pcb(current_pcb, end_of_program);  // run until page fault or end of program
+            // Run until page fault or end of program
+            int result = run_pcb(current_pcb, end_of_program);
             if (result == 1) {
                 ctx->enqueue_func(current_pcb);  // put back in queue if page fault
             } else if (result == -1) {
@@ -119,10 +105,10 @@ int scheduler_single(SchedulerContext *ctx) {
         while (ready_queue.head != NULL) {
             // Get pcb to run
             PCB *current_pcb = ctx->dequeue_func();
-	    int end_of_program = current_pcb->program_length;
+	        int end_of_program = current_pcb->program_length;
             int time_slice = ctx->time_slice;
 
-            // run until page fault, end of program, or time slice is up
+            // Run until page fault, end of program, or time slice is up
             int result = run_pcb(current_pcb, time_slice);  // run until page fault or time slice up
             if (result == -1) {
                 return 1;  // error with file

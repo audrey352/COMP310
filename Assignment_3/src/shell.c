@@ -75,8 +75,6 @@ int main(int argc, char *argv[]) {
         }
     } 
 
-    // eventually clean page tables?
-
     return 0;
 }
 

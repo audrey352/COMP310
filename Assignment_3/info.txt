@@ -48,7 +48,7 @@ Shell Memory Size:
 - assignment uses the variable FRAMESIZE to refer to the total number of lines in the program storage. 
 	in our code we are using this to define the number of lines in a single frame!! (FRAME_STORE_SIZE is our total number of lines)
 
-code loading + pauge faults
+code loading + paige faults
 - changed loading functions in shellmemory to deal with pages instead and not load all the program at once
 	we now have an initial function to load the first pages right after opening the file, 
 	and a function that loads a specific page to a frame (which we can use to swap out pages)
@@ -69,6 +69,15 @@ Note: will need to make sure we cleanup pages + page tables + etc properly when 
 
 Finished! 
 Changes made:
-To implement LRU I implemented a long global_clock and addded a timestamp to each frame. In shellmemory.c, global_clock gets initialized to 0. Then in shceduler.c every time execute current line is run we'll increment the global clock and each time a frame is used it's time_stamp is updated. Then in shellmemory I switched out the random number with a call to helper function find_least_recently_used which iterates through all_frames and finds the frame with the least time_stamp. 
+To implement LRU I implemented a long global_clock and added a timestamp to each frame. In shellmemory.c, global_clock gets initialized to 0. 
+Then in scheduler.c every time execute current line is run we'll increment the global clock and each time a frame is used it's time_stamp is updated. 
+Then in shellmemory I switched out the random number with a call to helper function find_least_recently_used which iterates through all_frames 
+and finds the frame with the least time_stamp. 
 
-I fixed small bugs to run the test cases and I switched the source implementation to end up calling the single scheduler, just because functionally it works the same and I didn't want to duplicate code. We do still have a pretty major bug that doesn't affect us passing the test cases but when I implemented page_table I set the size to the number of frames... however it's dependent on the program length which either means we should calculate the size of the program before initilaizing the pcb (or change the page_tables to be intialized within the pcb)... we didn't have any programs long enough before to have this be a problem but test case 5 with source does encounter this. I changed it for source.
+I fixed small bugs to run the test cases and I switched the source implementation to end up calling the single scheduler, just because functionally 
+it works the same and I didn't want to duplicate code. We do still have a pretty major bug that doesn't affect us passing the test cases but when 
+I implemented page_table I set the size to the number of frames... however it's dependent on the program length which either means we should calculate 
+the size of the program before initilaizing the pcb (or change the page_tables to be intialized within the pcb)... we didn't have any programs long 
+enough before to have this be a problem but test case 5 with source does encounter this. I changed it for source.
+
+fixed page table size issue to use the num pages in the program. implemented a function in shellmemory to count prog length and num of pages.

@@ -412,67 +412,30 @@ int cd(char *path) {
 int source(char *script) {
     // Initialize arrays
     int program_length;
- 
-    //Figure out how many pages we'll need
-    FILE* f = fopen(script, "r");
-    if (f == NULL) return 1;
+    int total_pages;
+    int err_code;
 
-    int total_lines = 0;
-    char buffer[MAX_LINE_LENGTH];
-    while (fgets(buffer, MAX_LINE_LENGTH, f) != NULL) {
-        total_lines++;
+    // Get program length and number of pages
+    if ((err_code = compute_program_length(script, &program_length, &total_pages)) != 0) {
+        printf("Error loading program %s: file doesn't exist\n", script);
+        return err_code;  // stop if a program doesn't exist or memory is full
     }
-    int total_pages = (total_lines + FRAME_SIZE - 1) / FRAME_SIZE;  // round up
-    fclose(f);
 
-
-    //Initialize page table based on how many pages are needed
+    // Initialize page table based on how many pages are needed
     int *page_table = malloc(sizeof(int) * total_pages);
-    //memset(page_table, -1, sizeof(int) * NUM_FRAMES);
-	for (int i = 0; i < total_pages ; i ++ ) {
-		page_table[i] = -1;
-	}
+	for (int i = 0; i < total_pages ; i++) {page_table[i] = -1;}
 
     // Load script into program storage
-    if (load_init(script, &program_length, page_table) != 0)
+    if (load_init(script, page_table, total_pages) != 0) {
         return badcommandFileDoesNotExist();
+    }
 
     // Create PCB for new program and add to ready-queue
     PCB *pcb = create_pcb(script, program_length, page_table);  // create PCB with page table
-   
     SchedulerContext* ctx = get_scheduler_context("RR");
-    
     enqueue_tail(pcb);
 
     return scheduler_single(ctx);
-
-    // Run ready queue until empty (using FCFS scheduling)
-    /*
-    while (ready_queue.head != NULL) {
-        // Get program to run
-        PCB *current_pcb = dequeue_head(); // remove head from queue
-        int* page_table = current_pcb->page_table;
-        int end_of_program = current_pcb->program_length;
-	
-        // Run full program
-        while (current_pcb->program_counter < end_of_program) {
-            // get program counter and convert that to an actual line in memory storage using the page table
-            int pc = current_pcb->program_counter;
-            int page   = pc / FRAME_SIZE;  // page number in the program
-            int offset = pc % FRAME_SIZE;  // line within page
-            int frame = page_table[page];  // frame number in memory
-            int index = frame * FRAME_SIZE + offset;  // index of the line in program storage
-
-            // execute the line
-            char *line = get_line(index);
-            if (line[0] != '\0') {  // skip padded lines (added when program doesn't fill a whole frame)
-                parseInput(line);  // execute instruction
-            }
-            current_pcb->program_counter++;  // advance to next instruction (next line in the program)
-        }
-    }
-    return 0;
-    */
 }
 
 
@@ -518,9 +481,7 @@ bool has_duplicate_files(char *files[], int num_files, int dup[]) {
     // check for duplicates in the list of files
     // if files[i] and files[j] are the same, set dup[j] = i, where i is the index of the first occurrence of that file. 
     // Otherwise, dup[j] should be -1.
-
     bool flag = false;
-
     for (int i = 0; i < num_files - 1; i++) {
         for (int j = i + 1; j < num_files; j++) {
             if (strcmp(files[i], files[j]) == 0) {
@@ -534,7 +495,8 @@ bool has_duplicate_files(char *files[], int num_files, int dup[]) {
 
 
 int exec(char *args[], int args_size, int mt_flag, int batch_flag){
-	char* policy;
+	int err_code;
+    char* policy;
     int num_programs = args_size - 1;
 	policy = args[num_programs];
 
@@ -542,15 +504,25 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     SchedulerContext* ctx = get_scheduler_context(policy);
     if (ctx == NULL) return 1;  // invalid policy
 
-    // allocate space to store program lengths
+    // Allocate space to store program lengths and number of pages needed for each program
 	int prog_lengths[num_programs];
     memset(prog_lengths, -1, sizeof(prog_lengths)); //intialize to -1	
+    int num_pages_total[num_programs];
+    memset(num_pages_total, -1, sizeof(num_pages_total)); //initialize to -1
 
-    // allocate space for page tables
+    // Compute program lengths and number of pages needed for each program
+    for (int i = 0; i < num_programs; i++) {
+        if ((err_code = compute_program_length(args[i], &prog_lengths[i], &num_pages_total[i])) != 0) {
+            printf("Error loading program %s: file doesn't exist\n", args[i]);
+            return err_code;  // stop if a program doesn't exist or memory is full
+        }
+    }
+
+    // Allocate space for page tables
     int* prog_page_tables[num_programs];  // array of page tables (one table per program)
     for (int i = 0; i < num_programs; i++) {
-        prog_page_tables[i] = malloc(sizeof(int) * NUM_FRAMES); 
-        memset(prog_page_tables[i], -1, sizeof(int) * NUM_FRAMES);  // initialize to -1
+        prog_page_tables[i] = malloc(sizeof(int) * num_pages_total[i]); 
+        memset(prog_page_tables[i], -1, sizeof(int) * num_pages_total[i]);  // initialize to -1
     }
 
     // Check if there are duplicate programs and set a flag for later.
@@ -558,61 +530,33 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     for (int i = 0; i < num_programs; i++) {duplicates[i] = -1;} // initialize all entries to -1
     bool duplicate_flag = has_duplicate_files(args, num_programs, duplicates);
 
-    // printf("number of programs: %d \n", num_programs);
-    // printf("programs: ");
-    // for (int i = 0; i < num_programs; i++) {
-    //     printf("%s ", args[i]);
-    // }
-    // printf("\n");
-    // printf("Duplicates array (flag %d):", duplicate_flag);
-    // for (int i = 0; i < num_programs; i++) {
-    //     printf("%d ", duplicates[i]);
-    // }
-    // printf("\n");
-
     // Load all input programs into memory
     for (int i = 0; i < num_programs; i++){
-        //printf("\nLoading program: %s \n", args[i]);
         // check if program already exists in memory
         int p = duplicates[i];  // -1 if no duplicate, otherwise index of first occurrence of the same file
 
-        if (p != -1 && duplicate_flag){  // if it exists, just copy the info
-            prog_lengths[i] = prog_lengths[p];
+        if (p != -1 && duplicate_flag){  // if it exists, just copy the table
             prog_page_tables[i] = prog_page_tables[p];  // shared page table!
         } else {  // load program in memory
-            int err_code; 
-            if ((err_code = load_init(args[i], &prog_lengths[i], prog_page_tables[i])) != 0) {
+            if ((err_code = load_init(args[i], prog_page_tables[i], num_pages_total[i])) != 0) {
                 printf("Error loading program %s: file doesn't exist\n", args[i]);
                 return err_code;  // stop if a program doesn't exist or memory is full
             }
         }
-	//printf("Done loading program: %s \n", args[i]);
     }
 
-    // printf("\nCreating PCBs and adding to ready queue...\n");
     // Create & enqueue all PCBs (only if all programs loaded successfully)
     for (int i = 0; i < num_programs; i++){
         PCB *pcb = create_pcb(args[i], prog_lengths[i], prog_page_tables[i]);
-        
-	//printf("\n \ncreated pcb: %d  with: \n", pcb->PID);
-	//int* page_table = pcb->page_table;
-	//for (int i = 0 ; i < NUM_FRAMES ; i++){
-		//printf("Frame %d stored at %d in memory \n", i, page_table[i]);
-	//}
-	//printf("\n\n");
-	
-	
-	if (mt_flag) {
-            pthread_mutex_lock(&ready_queue_lock);
-            ctx->enqueue_func(pcb);
-            pthread_mutex_unlock(&ready_queue_lock);
-        } else {
-            ctx->enqueue_func(pcb);
-        }
+
+        if (mt_flag) {
+                pthread_mutex_lock(&ready_queue_lock);
+                ctx->enqueue_func(pcb);
+                pthread_mutex_unlock(&ready_queue_lock);
+            } else {
+                ctx->enqueue_func(pcb);
+            }
     }
-    //printf("Finished creating PCBs and adding to ready queue.\n");
-
-
 
     // If # is enabled, load PCB to ready queue at head. -- NOT NEEDED FOR THIS ASSIGNMENT, not updated for paging :(
     // if (batch_flag) {
@@ -639,10 +583,13 @@ int exec(char *args[], int args_size, int mt_flag, int batch_flag){
     if (mt_flag) {
         return scheduler_multi(ctx);  // creates 2 worker threads
     } else {
-        // printf("\nRunning single-threaded scheduler with policy %s...\n", policy);
         return scheduler_single(ctx);
     }
 
+    // free page tables
+    for (int i = 0; i < num_programs; i++) {
+        free(prog_page_tables[i]);
+    }
 	return 0;
 }
 

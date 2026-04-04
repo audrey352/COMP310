@@ -9,8 +9,6 @@
 #define NUM_FRAMES (FRAME_STORE_SIZE / FRAME_SIZE)
 #define MAX_LINE_LENGTH 1000  // max number of characters in a line
 
-extern long global_clock; //keeps track of how long the program has been running
-
 struct var_memory_struct {  // struct for variable memory
     char *var;
     char *value;
@@ -21,12 +19,13 @@ struct Frame {  // struct for metadata of each frame in program storage
     int page_number;  // which page is stored in this frame? 
     char* prog_name;  // name of the program that owns this frame (used to open the correct file)
     int *page_table;   // pointer to PCB's page table
-    long time_stamp; //stores the last time the frame was used (0 if never)
+    long time_stamp; // stores the last time the frame was used (0 if never)
 };
 
 extern struct Frame all_frames[NUM_FRAMES];
 extern char *program_storage[FRAME_STORE_SIZE];
 extern int next_pid;
+extern long global_clock; // keeps track of how long the program has been running
 
 void mem_init();
 char *mem_get_value(char *var);
@@ -38,11 +37,7 @@ struct Frame create_frame(char* prog_name, int page_number, int* page_table);
 int add_frame(char *lines[], char* prog_name, int page_number, int* page_table);
 int replace_page(char* new_prog_name, int new_page_number, int* new_page_table);
 int load_page(char* filename, int page_number, int* page_table);
-int load_init(char* filename, int* length_out, int* page_table);
-
-
-// int clean_frames(int length, int* page_table);
-// int load_program(char *script, int* length_out, int* page_table);
-// int load_program_file(FILE *fp, int* length_out, int* page_table);
+int load_init(char* filename, int* page_table, int num_pages_total);
+int compute_program_length(char* filename, int* length_out, int* num_pages_out);
 
 #endif
