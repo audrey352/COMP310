@@ -11,10 +11,8 @@ char *program_storage[FRAME_STORE_SIZE];  // program storage (single array to st
 										  // FRAME_STORE_SIZE is the total number of lines in prog storage. 
 										  // it's defined in the makefile!
 struct Frame all_frames[NUM_FRAMES];  // keeps track of all the frames in storage
-int next_pid = 1;  // global counter for assigning unique PIDs (used when creating pcbs)
-
-//Initialize the global clock
-long global_clock = 0;
+int next_pid = 1;  // Initialize global counter for assigning unique PIDs (used when creating pcbs)
+long global_clock = 0;  // Initialize the global clock
 
 // Helper functions
 int match(char *model, char *var) {
